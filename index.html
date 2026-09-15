@@ -47,8 +47,8 @@ button:disabled{cursor:default;color:#777;background:#aaa;filter:saturate(.2);op
 .directions button{min-height:58px;padding:6px;gap:0}
 .menu-icon{width:32px;height:32px;image-rendering:pixelated;image-rendering:crisp-edges;display:block;flex:none}
 .direction-icon{width:40px;height:40px;image-rendering:pixelated;image-rendering:crisp-edges;display:block}
-.item-icon{width:32px!important;height:32px!important;object-fit:contain;image-rendering:pixelated;image-rendering:crisp-edges;position:static!important}
-.item-icon:before,.item-icon:after{display:none!important;content:none!important}
+.item-icon{width:32px!important;height:32px!important;display:block;position:relative!important;image-rendering:pixelated;image-rendering:crisp-edges;background:transparent!important;flex:0 0 auto}
+.item-icon:before,.item-icon:after{display:block!important}
 .item-slot{min-height:70px}
 .item-slot:not(.owned) .item-icon,.item-slot:not(.owned) .item-label{filter:grayscale(1) blur(1.8px);opacity:.26}
 .item-slot.owned .item-icon,.item-slot.owned .item-label{filter:none;opacity:1}
@@ -138,7 +138,7 @@ body{padding-left:max(5px,env(safe-area-inset-left));padding-right:max(5px,env(s
       <div class="message-block block"><div id="message"></div></div>
     </div>
     <div id="action-status" class="action-status"></div>
-    <div id="inventory" class="inventory"></div><div class="v4-proof">V23 — polished text edition: spelling, grammar, punctuation, and interaction feedback cleaned up</div>
+    <div id="inventory" class="inventory"></div><div class="v4-proof">V26 — restaurant price-note hotspot expanded to cover the full note</div>
   </section>
 
   <section id="game-over-screen" class="panel end-screen hidden">
@@ -394,7 +394,7 @@ const scenes = {
             { id: "rexpic", x: 5, y: 5, w: 29, h: 34, examine: () => "The mighty T-Rex." },
             { id: "salad", x: 31, y: 46, w: 40, h: 35, examine: () => "This is the salad bar. Is the food here plastic?" },
             { id: "spice", x: 8, y: 53, w: 15, h: 25, examine: () => "This is an empty revolving spice rack." },
-            { id: "pricenote", x: 67, y: 70, w: 12, h: 12, examine: () => 'This is a menu. It reads: "The world-famous T-Rex Burger, a staff favorite, $4.95. With prehistoric fries, $6.50."' }
+            { id: "pricenote", x: 60, y: 67, w: 24, h: 18, examine: () => 'The note reads: "The world-famous T-Rex Burger, a staff favorite, $4.95. With prehistoric fries, $6.50."' }
         ]
     },
     kitchen: {
@@ -818,8 +818,10 @@ scenes.ranger4x4.hotspots=()=>[
 // Kitchen exact tests recovered from P-code.
 scenes.kitchen.hotspots=()=>[
   V4R(state.matchesTaken?9:8,'recipe',109,15,136,54,{examine:()=>'This is a recipe for prevention. It reads: "An ounce of prevention is twelve from the right."'}),
-  V4R(state.matchesTaken?9:8,'boiling pot',13,100,37,120,{examine:()=>"This is a pot of boiling liquid.",take:()=>{die('As you reach for the liquid, your clothes catch fire.');return '';}}),
-  V4R(state.matchesTaken?9:8,'burger / pan',58,109,94,120,{examine:()=>state.burgerTaken?'This is an empty frying pan.':'This is a frying pan. It looks as if there is a hamburger in it.',take:()=>state.burgerTaken?"You can't take that.":takeItem('burger','You took the burger.',()=>state.burgerTaken=true)}),
+  // Expanded to cover the whole visible steaming pot rather than only its lower edge.
+  V4R(state.matchesTaken?9:8,'boiling pot',8,84,48,125,{examine:()=>"This is a pot of boiling liquid.",take:()=>{die('As you reach for the liquid, your clothes catch fire.');return '';}}),
+  // Expanded across the complete frying pan and handle.
+  V4R(state.matchesTaken?9:8,'burger / pan',48,98,114,126,{examine:()=>state.burgerTaken?'This is an empty frying pan.':'This is a frying pan. It looks as if there is a hamburger in it.',take:()=>state.burgerTaken?"You can't take that.":takeItem('burger','You took the burger.',()=>state.burgerTaken=true)}),
   V4R(state.matchesTaken?9:8,'matches',151,118,169,125,{examine:()=>"This is a box of matches.",take:()=>state.matchesTaken?'You already have that!':takeItem('matches','You took the matches.',()=>state.matchesTaken=true)}),
   V4R(state.matchesTaken?9:8,'sink',213,79,259,123,{examine:()=>"This is your run-of-the-mill kitchen sink."}),
   V4R(state.matchesTaken?9:8,'spice rack',117,81,151,113,{examine:()=>"This is an empty revolving spice rack."})
@@ -848,7 +850,8 @@ scenes.visitorOutside.hotspots=()=>[
 scenes.visitorInside.hotspots=()=>[
   V4R(16,'T-Rex skull',255,86,292,112,{examine:()=>"Examining the skull of the great T-Rex, you realize what an awesome killing machine it must have been."}),
   V4R(16,'T-Rex skeleton',164,118,243,188,{examine:()=>"The T-Rex measures 12 meters from head to tail."}),
-  V4R(16,'information plaque',22,180,42,200,{examine:()=>"Tyrannosaurus rex is one of the largest meat-eating dinosaurs. It was named by Henry Fairfield Osborn after partial skeletal remains were found in Montana in 1905."})
+  // Expanded around the question-mark information plaque in the lower-left corner.
+  V4R(16,'information plaque',14,168,55,211,{examine:()=>"Tyrannosaurus rex is one of the largest meat-eating dinosaurs. It was named by Henry Fairfield Osborn after partial skeletal remains were found in Montana in 1905."})
 ];
 
 // Control room exact object rectangles. Password comparison is literally #25567ef.
@@ -922,14 +925,14 @@ scenes.zookeeper.hotspots=()=>{
     }),
     V4R(23,'tree carving',249,133,259,204,{examine:()=>"There is a carving in the tree: N, N, S, L, R."})
   ];
-  if(!state.hatMoved)return [V4R(24,'hat',45,175,91,195,{examine:()=>"All that is left is his hat.",operate:()=>{state.hatMoved=true;renderScene();return 'Moving the hat aside, you see a key.';}})];
-  if(!state.keyTaken)return [V4R(25,'key',57,179,82,196,{examine:()=>"This is a shiny key.",take:()=>takeItem('key','You took the key.',()=>state.keyTaken=true)})];
-  return [V4R(26,'hat',45,175,91,195,{examine:()=>"All that is left is his hat."})];
+  if(!state.hatMoved)return [V4R(24,'hat',34,164,103,208,{examine:()=>"All that is left is his hat.",operate:()=>{state.hatMoved=true;renderScene();return 'Moving the hat aside, you see a key.';}})];
+  if(!state.keyTaken)return [V4R(25,'key',50,171,89,202,{examine:()=>"This is a shiny key.",take:()=>takeItem('key','You took the key.',()=>state.keyTaken=true)})];
+  return [V4R(26,'hat',34,164,103,208,{examine:()=>"All that is left is his hat."})];
 };
 
 // Maintenance: key, not nail file.
 scenes.maintenance.hotspots=()=>[
-  V4R(state.maintenanceOpen?7:6,'maintenance lock / door',196,126,212,146,{
+  V4R(state.maintenanceOpen?7:6,'maintenance lock / door',102,51,217,217,{
     examine:()=>"Maintenance door",
     operate:(item)=>{
       if(state.maintenanceOpen)return 'The maintenance door is already open.';
@@ -945,16 +948,18 @@ scenes.dock.hotspots=()=>[
   {id:'boat',x:19,y:32,w:67,h:40,examine:()=>"A small boat. This could be your way off Dinosaur Island.",operate:()=>{say('You made it out in the nick of time. Congratulations!');setTimeout(win,300);return 'You made it out in the nick of time. Congratulations!';}}
 ];
 
-// Replace CSS-drawn inventory art with the original embedded icon resources.
+// Use clean CSS-drawn inventory icons so item art does not show black matte edges.
 renderInventory=function(){
   inventoryEl.innerHTML='';
   Object.keys(itemNames).forEach(id=>{
     const slot=document.createElement('button');
     slot.className='item-slot'+(state.inventory[id]?' owned':'')+(state.selectedItem===id?' selected':'');
-    slot.disabled=!state.inventory[id];slot.dataset.item=id;
-    const icon=(id==='torch'&&state.torchLit)?V4_ICONS.torch_lit:V4_ICONS[id];
-    slot.innerHTML=`<img class="item-icon" src="${icon}" alt=""><span class="item-label">${itemNames[id]}</span>`;
-    slot.addEventListener('click',()=>inventoryClick(id));inventoryEl.appendChild(slot);
+    slot.disabled=!state.inventory[id];
+    slot.dataset.item=id;
+    const torchClass=(id==='torch'&&state.torchLit)?' torch lit':' '+id;
+    slot.innerHTML=`<span class="item-icon${torchClass}" aria-hidden="true"></span><span class="item-label">${itemNames[id]}</span>`;
+    slot.addEventListener('click',()=>inventoryClick(id));
+    inventoryEl.appendChild(slot);
   });
 };
 
