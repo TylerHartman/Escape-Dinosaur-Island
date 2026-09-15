@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Escape from Dinosaur Island — Browser Remake</title>
+<title>Escape from Dinosaur Island — Browser Remake V4</title>
 <style>
 :root{--panel:#bdbdbd;--hi:#fff;--mid:#d9d9d9;--shadow:#555;--deep:#202020;--text:#111}
 *{box-sizing:border-box}
@@ -37,6 +37,20 @@ button:disabled{cursor:default;color:#777;background:#aaa;filter:saturate(.2);op
 .modal{position:fixed;inset:0;background:#000a;display:flex;align-items:center;justify-content:center;padding:18px;z-index:20}.modal-box{width:min(620px,96vw);background:#c0c0c0;border-top:4px solid #fff;border-left:4px solid #fff;border-right:4px solid #444;border-bottom:4px solid #444;padding:20px;box-shadow:0 18px 70px #000}.text-modal h2{margin-top:0}.text-modal{line-height:1.45}.terminal{background:#050505;color:#0f0}.terminal pre{white-space:pre-wrap;font:18px/1.35 "Courier New",monospace;margin:0 0 12px}.terminal input{width:100%;font:20px "Courier New",monospace;background:#000;color:#0f0;border:2px solid #0f0;padding:9px;margin-bottom:12px}.terminal button{margin-right:8px}
 @media(max-width:760px){body{padding:5px;align-items:flex-start}.panel{padding:6px}.controls-row{grid-template-columns:1fr 1fr}.message-block{grid-column:1/-1;min-height:100px}.inventory{grid-template-columns:repeat(3,1fr)}#scene-image{height:auto;width:100%;min-height:0}.game-head{font-size:14px}.verbs button{font-size:14px}.message-block #message{font-size:14px}}
 
+
+/* V4: original ESCAPE.EXE icon artwork */
+.verbs button,.directions button{display:flex;align-items:center;justify-content:center;gap:8px}
+.verbs button{min-height:68px;flex-direction:column;padding:5px 8px;font-size:13px}
+.directions button{min-height:58px;padding:4px}
+.menu-icon{width:32px;height:32px;image-rendering:pixelated;image-rendering:crisp-edges;display:block;flex:none}
+.direction-icon{width:32px;height:32px;image-rendering:pixelated;image-rendering:crisp-edges;display:block}
+.item-icon{width:32px!important;height:32px!important;object-fit:contain;image-rendering:pixelated;image-rendering:crisp-edges;position:static!important}
+.item-icon:before,.item-icon:after{display:none!important;content:none!important}
+.item-slot{min-height:70px}
+.item-slot:not(.owned) .item-icon{filter:grayscale(1);opacity:.22}
+.item-slot.owned .item-icon{filter:none;opacity:1}
+.v4-proof{font-size:10px;color:#333;text-align:right;margin-top:4px}
+
 </style>
 </head>
 <body>
@@ -59,21 +73,21 @@ button:disabled{cursor:default;color:#777;background:#aaa;filter:saturate(.2);op
     </div>
     <div class="controls-row">
       <div class="verbs block">
-        <button class="verb" data-verb="go">GO</button>
-        <button class="verb" data-verb="examine">EXAMINE</button>
-        <button class="verb" data-verb="take">TAKE</button>
-        <button class="verb" data-verb="operate">OPERATE</button>
+        <button class="verb" data-verb="go"><img class="menu-icon" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAtUlEQVR4nO2X3Q6AIAiFqfng59F4s7qpzTlDYBjr52xdlfB1UNSFmTdKVCEiYuaU5ABoTclcSQUAgADkANSJPRAj+Kkl0MCLAL1BWhe0Y6c4YCnVJYAUJHJChjswgmvfdwE0fxjlQqgDHqhndEKNvCV5jwNapa6CqZ0wfA5Ed0LXZhSl27Zjz+5ZrAE9EJK+1wdamUtwZbH39JTuwA9gOhVbuqN2OYqT0BLI+u2p9BLQcT1Pe3b6gmtlqQGIXQAAAABJRU5ErkJggg==" alt=""><span>GO</span></button>
+        <button class="verb" data-verb="examine"><img class="menu-icon" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAA4ElEQVR4nO2XSw7DMAhEadV74ZuV3gyfrF00rqiDfwkOG4+URaQATxAPyY2Z3+CoBwAAM7sUJ6IvwEiA5XMA0AaQyXo7FULohikCpMAj45ExCaYEogIQkdl7kfKEEFSIe6s4IgIimoA0AbTiltIgfgC1tscYp0FUT4Fl4ZJ274CU1fwPA0gQF4ArRtB0wtkQf6dAWugs5Ya084GZEJobqk44A6JkxcVdkCDO7oRDy0gGyG5cuo61BL2jMf0gqSV+bvevgYK5upxwphbAAlgAQz6Q68z5T3LvgDsAbL/nbtcHCf6LsF8oLqoAAAAASUVORK5CYII=" alt=""><span>EXAMINE</span></button>
+        <button class="verb" data-verb="take"><img class="menu-icon" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAABX0lEQVR4nMVXUa7EIAgcmh7Mmy17M27G+5E+Y7FKS7OTNNZUYYQBUxIRxY9QSsEOACICZgYAMIAPgK8zct1oazOwmUGdOP/U7/oGAXWcUXXojZkkNuAcZgKgqsOHUlw3BFrn5uQKs+9hAhaBCFQ1JQ078K9uBUBEyydUVRDRIyJHFTBwK7dPI7HZCzPfNvSExDZf8i6JEwFmBlE8GaadKIk97GkAE6SNwFqzSktBS8LebxOYpYGIjueKyAqJcAr6uu/7RhuFdj4iEkqBZ8iL1nFn1ChdRSJFAx6JZk5XJIYE7pZji5oaNVseibQq6An3WhgdKK0PjNCKMJQCQyQNsyh4mBJYMTIisdKUUjuhh741h0TYn2altTIzROR0L4iIS2IqwsjtZs7NYeu8lOLaIhFR2/QEM6JeBwWSy3B0kFLKcE9aK76KYvvrZ+tt/noV9AiLcMXgioZGQrRfvZ/hD1RoB+JrUOcQAAAAAElFTkSuQmCC" alt=""><span>TAKE</span></button>
+        <button class="verb" data-verb="operate"><img class="menu-icon" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAABB0lEQVR4nMXWYQ6DIAwF4NfFg3m0dzRv1v2YOmDAWtZmJCTq1PdZhiLHcSj+1PZ9x3ZuiKp2ISJS7ZMMRWwAMAo/f0sFbd4LSlCLWQaIyMeT9lrGcJgrICLh4w8AD+uJqpoHIGkazwyEuQIXMBpxA0ZVKIMzEMMKjIKjERWgrMIsOGL+dwFeRHgFvIg0gAURVYHpm7BEtNuj8y3HzID2BtYn9lTG/CKyNpJ3/wvAiwgFtIEWREoFeogRxL0ium66crwHcVeAJBTo9m/l/hlwhY+aFbEEqMJVX30RsQR4J5zBQV/E9FkQDwhcC7gAJHFHTxCCxP9AhQgIdwNKRK+vrA8EmE7t7CZP9d23IkPt6ToAAAAASUVORK5CYII=" alt=""><span>OPERATE</span></button>
       </div>
       <div class="directions block">
-        <button class="dir north" data-dir="north">NORTH</button>
-        <button class="dir west" data-dir="west">WEST</button>
-        <button class="dir east" data-dir="east">EAST</button>
-        <button class="dir south" data-dir="south">SOUTH</button>
+        <button class="dir north" data-dir="north"><img class="direction-icon" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAsElEQVR4nO2W6wqAMAiFNXrwvbn9GKsYOW8LCyZIwZx+LjoOAYAg0bbM4gtgAXwCYLdvKcF1N0DpntG4agiiENkSevYR7+V8J7qci3+OKYP8tXmx+L2AkIyJ4SHMfwG9MDnUxK076TNYcrp0AHHeSbiFqEFEQUJKiBg/jSlSHIGYNgsiEP/QgdbdqEtNzOM+3kUZVfg4R/owUgBYQbRxZoC+gHc9DDDX0u+EC2ABpAMc0c3ka6eEAj0AAAAASUVORK5CYII=" alt="NORTH"><span>NORTH</span></button>
+        <button class="dir west" data-dir="west"><img class="direction-icon" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAArklEQVR4nO2V3QrAIAiFT2MP7pu7iyBG4E/acBcJsbGO+eXMGgBGoV2VwQ/AAfgFwL3uQsn5MABNz6yuW4PZiNYWjPixPGi8M2s6KDqyfOzgOQAdovwUAI7dI50BOQvlGUgB8IaL3A3Qmh2Ques+AZCCZbNQXgOAsw/gVeFzpUvftbUQOQVayiP/f/jKw98PIrsHwOWXkQNgFcSrWwaYA0Tn0wB7rbwPHIADUA7wAP5g2nPOprwIAAAAAElFTkSuQmCC" alt="WEST"><span>WEST</span></button>
+        <button class="dir east" data-dir="east"><img class="direction-icon" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAo0lEQVR4nO2V3QqAMAiFj9GD783tYhAxclO3YYHCoWD+fFg6AsAItCOyeAIkwCcATntImTx3A5TmOetXjTBcRLaEzACRLY5llfudWS8ph6Bx8SfEIJngI0Msn4LafpupiTUdkPWe8397gDsz42m/GcBTpGfhnyAcAFi8B7S5sGsKej+pGCNr/yoOv4wUAFYQrZ8ZoC3gPZ8GWGvheyABEiAc4AKSc/BhPNQpigAAAABJRU5ErkJggg==" alt="EAST"><span>EAST</span></button>
+        <button class="dir south" data-dir="south"><img class="direction-icon" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAt0lEQVR4nO2V3Q6AIAiFD60H983pwgudpR6kRheysbbk54MhCgBFoByRyTfABvgFwGl3Sc7zZYDUfL12WQTTRWQLuOKnfU23f6pjZWI0yiXvJ3gGZCGoGVAFRBjLYmfxoarvVcDrcxeoPSCSK/pC6GvIQrBtNwOwwWtIxn5hE46lTsoMYvhbAEym1nMDiq9jD7TDN2updQYwruL7VRz+GBEAVhDWzgzQJlg9dwO8K+F7YANsgHCAC7nE8nXQ7CN/AAAAAElFTkSuQmCC" alt="SOUTH"><span>SOUTH</span></button>
       </div>
       <div class="message-block block"><div id="message"></div></div>
     </div>
     <div id="action-status" class="action-status"></div>
-    <div id="inventory" class="inventory"></div>
+    <div id="inventory" class="inventory"></div><div class="v4-proof">V4 — map/hotspots reconstructed from original VB3 binary; icons extracted from ESCAPE.EXE</div>
   </section>
 
   <section id="game-over-screen" class="panel end-screen hidden">
@@ -212,22 +226,37 @@ function operateGeneric(item) {
         return "You can't operate that!";
     return "nothing happened when you used that";
 }
-// GEOGRAPHY AUDIT
-// ----------------
-// Cardinal routes are defined deliberately and checked as reversible pairs:
-// Entrance N <-> Ranger S; Entrance W <-> Maintenance E.
-// Ranger E <-> Restaurant W; Ranger N <-> Fence S.
-// Restaurant N <-> Restaurant Interior S; Restaurant E <-> Park Center W.
-// Restaurant Interior N <-> Kitchen S.
-// Park Center N <-> Museum S; Museum E <-> Control Room W.
-// Maintenance N <-> Control Room S (service-tunnel shortcut).
-// Fence N <-> T-Rex S; T-Rex N <-> Zoo Keeper S; Zoo Keeper N <-> Dock S.
-// The Ranger vehicle interior is nested at the Ranger scene: OPERATE truck enters it, SOUTH exits it.
-// Conditional barriers (closed maintenance door, uncut fence, live T-Rex, missing key) do not alter geography.
+// GEOGRAPHY AUDIT — road-informed map
+// ------------------------------------
+// The outdoor scenes are laid out as an actual orthogonal map rather than a
+// sequence of convenient links.  The visible road in the original art is the
+// primary anchor:
+//
+//   MAIN ROAD (west -> east)
+//   Entrance <-> Ranger <-> Restaurant <-> Park Center <-> Maintenance
+//                  |              |              |              |
+//                Fence       Restaurant       Museum/         Control
+//                  |           interior       visitor           room
+//                T-Rex            |            interior <-------+
+//                  |            Kitchen
+//              Zoo keeper
+//                  |
+//                 Dock
+//
+// Coordinates used while auditing the graph:
+// Entrance (0,0), Ranger (1,0), Restaurant (2,0), Park Center (3,0),
+// Maintenance (4,0); Fence (1,1), T-Rex (1,2), Zoo keeper (1,3), Dock (1,4);
+// Restaurant interior (2,1), Kitchen (2,2), Visitor interior (3,1),
+// Control room (4,1).
+//
+// The Ranger vehicle interior is NOT a road node and is never used to arrive
+// at the park.  The game starts at Entrance.  The vehicle can only be entered
+// by operating the 4x4 while standing on the Ranger scene; SOUTH steps back
+// outside. Conditional barriers do not change the underlying geography.
 const scenes = {
     car: {
         title: "Abandoned vehicle",
-        description: () => "You are inside the Ranger 4x4. Going south returns you to the road.",
+        description: () => "You are inside the Ranger 4x4. Going south steps back outside to the Ranger location.",
         image: () => state.gloveboxOpen ? 2 : 1,
         // The vehicle interior is a nested location at the Ranger 4x4, not a map starting point.
         exits: {
@@ -249,12 +278,12 @@ const scenes = {
         title: "Entrance",
         description: () => "You have arrived at the entrance to DINOSAUR ISLAND. In the distance you hear a roar of the mighty T-Rex. Is it safe to enter?",
         image: () => 4,
-        // Main map origin. The park path continues north; the maintenance entrance is west.
+        // Main map origin. The visible road bends east into the park.
         exits: {
-            north: () => goScene("ranger4x4"),
+            east: () => goScene("ranger4x4"),
             south: () => die("Not seeing the cliff ahead, you plunge 200 feet to your death"),
-            west: () => goScene("maintenance"),
-            east: noExit
+            north: noExit,
+            west: noExit
         },
         hotspots: () => [
             { id: "welcome", x: 27, y: 14, w: 46, h: 25, examine: () => "this is the welcome sign" },
@@ -267,9 +296,9 @@ const scenes = {
         description: () => "you are at the maintenance tunnel entrance",
         image: () => state.maintenanceOpen ? 7 : 6,
         exits: {
-            east: () => goScene("entrance"),
+            west: () => goScene("visitorOutside"),
             north: () => state.maintenanceOpen ? goScene("control", "Noticing the door was open you walk in") : (say("The maintenance door is closed."), clearAction()),
-            south: noExit, west: noExit
+            south: noExit, east: noExit
         },
         hotspots: () => [
             { id: "door", x: 31, y: 21, w: 35, h: 68, examine: () => state.maintenanceOpen ? "The maintenance door stands open." : "Maintenance door",
@@ -331,7 +360,7 @@ const scenes = {
         title: "Visitors centre",
         description: () => "Your travels bring you to the main building of Dinosaur Island. Thats odd, still no signs of life.",
         image: () => 15,
-        exits: { west: () => goScene("restaurantOutside"), north: () => goScene("visitorInside"), south: noExit, east: noExit },
+        exits: { west: () => goScene("restaurantOutside"), east: () => goScene("maintenance"), north: () => goScene("visitorInside"), south: noExit },
         hotspots: () => [
             { id: "building", x: 18, y: 22, w: 73, h: 73, examine: () => "The Park Center appears deserted." },
             { id: "flags", x: 0, y: 8, w: 100, h: 30, examine: () => "The Dinosaur Island flag hangs proudly from the roof" }
@@ -368,7 +397,7 @@ const scenes = {
         title: "Ranger",
         description: () => "A large 4x4 with the markings 'RANGER' stands before you.",
         image: () => 12,
-        exits: { south: () => goScene("entrance"), north: () => goScene("fence"), east: () => goScene("restaurantOutside"), west: noExit },
+        exits: { west: () => goScene("entrance"), north: () => goScene("fence"), east: () => goScene("restaurantOutside"), south: noExit },
         hotspots: () => [
             { id: "truck", x: 4, y: 34, w: 92, h: 63, examine: () => "A large 4x4 with the markings 'RANGER' stands before you.", operate: (item) => { if (item)
                     return "nothing happened when you used that"; goScene("car", "You climb inside the Ranger vehicle."); return ""; } },
@@ -656,5 +685,209 @@ sceneImg.addEventListener("load", () => { if (debugMode)
     renderDebug(); });
 
 </script>
+
+<script>
+/* V4 FORENSIC OVERRIDES -----------------------------------------------------
+   Cardinal links below are based on the original VB3 direction handlers.
+   Known hotspot rectangles below are converted from the compiled twip tests
+   back to the source DIB pixel coordinates. Unresolved interactions remain
+   conservative rather than inventing new map links. */
+const V4_ICONS = {'go':'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAtUlEQVR4nO2X3Q6AIAiFqfng59F4s7qpzTlDYBjr52xdlfB1UNSFmTdKVCEiYuaU5ABoTclcSQUAgADkANSJPRAj+Kkl0MCLAL1BWhe0Y6c4YCnVJYAUJHJChjswgmvfdwE0fxjlQqgDHqhndEKNvCV5jwNapa6CqZ0wfA5Ed0LXZhSl27Zjz+5ZrAE9EJK+1wdamUtwZbH39JTuwA9gOhVbuqN2OYqT0BLI+u2p9BLQcT1Pe3b6gmtlqQGIXQAAAABJRU5ErkJggg==','examine':'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAA4ElEQVR4nO2XSw7DMAhEadV74ZuV3gyfrF00rqiDfwkOG4+URaQATxAPyY2Z3+CoBwAAM7sUJ6IvwEiA5XMA0AaQyXo7FULohikCpMAj45ExCaYEogIQkdl7kfKEEFSIe6s4IgIimoA0AbTiltIgfgC1tscYp0FUT4Fl4ZJ274CU1fwPA0gQF4ArRtB0wtkQf6dAWugs5Ya084GZEJobqk44A6JkxcVdkCDO7oRDy0gGyG5cuo61BL2jMf0gqSV+bvevgYK5upxwphbAAlgAQz6Q68z5T3LvgDsAbL/nbtcHCf6LsF8oLqoAAAAASUVORK5CYII=','take':'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAABX0lEQVR4nMVXUa7EIAgcmh7Mmy17M27G+5E+Y7FKS7OTNNZUYYQBUxIRxY9QSsEOACICZgYAMIAPgK8zct1oazOwmUGdOP/U7/oGAXWcUXXojZkkNuAcZgKgqsOHUlw3BFrn5uQKs+9hAhaBCFQ1JQ078K9uBUBEyydUVRDRIyJHFTBwK7dPI7HZCzPfNvSExDZf8i6JEwFmBlE8GaadKIk97GkAE6SNwFqzSktBS8LebxOYpYGIjueKyAqJcAr6uu/7RhuFdj4iEkqBZ8iL1nFn1ChdRSJFAx6JZk5XJIYE7pZji5oaNVseibQq6An3WhgdKK0PjNCKMJQCQyQNsyh4mBJYMTIisdKUUjuhh741h0TYn2altTIzROR0L4iIS2IqwsjtZs7NYeu8lOLaIhFR2/QEM6JeBwWSy3B0kFLKcE9aK76KYvvrZ+tt/noV9AiLcMXgioZGQrRfvZ/hD1RoB+JrUOcQAAAAAElFTkSuQmCC','operate':'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAABB0lEQVR4nMXWYQ6DIAwF4NfFg3m0dzRv1v2YOmDAWtZmJCTq1PdZhiLHcSj+1PZ9x3ZuiKp2ISJS7ZMMRWwAMAo/f0sFbd4LSlCLWQaIyMeT9lrGcJgrICLh4w8AD+uJqpoHIGkazwyEuQIXMBpxA0ZVKIMzEMMKjIKjERWgrMIsOGL+dwFeRHgFvIg0gAURVYHpm7BEtNuj8y3HzID2BtYn9lTG/CKyNpJ3/wvAiwgFtIEWREoFeogRxL0ium66crwHcVeAJBTo9m/l/hlwhY+aFbEEqMJVX30RsQR4J5zBQV/E9FkQDwhcC7gAJHFHTxCCxP9AhQgIdwNKRK+vrA8EmE7t7CZP9d23IkPt6ToAAAAASUVORK5CYII=','north':'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAsElEQVR4nO2W6wqAMAiFNXrwvbn9GKsYOW8LCyZIwZx+LjoOAYAg0bbM4gtgAXwCYLdvKcF1N0DpntG4agiiENkSevYR7+V8J7qci3+OKYP8tXmx+L2AkIyJ4SHMfwG9MDnUxK076TNYcrp0AHHeSbiFqEFEQUJKiBg/jSlSHIGYNgsiEP/QgdbdqEtNzOM+3kUZVfg4R/owUgBYQbRxZoC+gHc9DDDX0u+EC2ABpAMc0c3ka6eEAj0AAAAASUVORK5CYII=','south':'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAt0lEQVR4nO2V3Q6AIAiFD60H983pwgudpR6kRheysbbk54MhCgBFoByRyTfABvgFwGl3Sc7zZYDUfL12WQTTRWQLuOKnfU23f6pjZWI0yiXvJ3gGZCGoGVAFRBjLYmfxoarvVcDrcxeoPSCSK/pC6GvIQrBtNwOwwWtIxn5hE46lTsoMYvhbAEym1nMDiq9jD7TDN2updQYwruL7VRz+GBEAVhDWzgzQJlg9dwO8K+F7YANsgHCAC7nE8nXQ7CN/AAAAAElFTkSuQmCC','east':'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAo0lEQVR4nO2V3QqAMAiFj9GD783tYhAxclO3YYHCoWD+fFg6AsAItCOyeAIkwCcATntImTx3A5TmOetXjTBcRLaEzACRLY5llfudWS8ph6Bx8SfEIJngI0Msn4LafpupiTUdkPWe8397gDsz42m/GcBTpGfhnyAcAFi8B7S5sGsKej+pGCNr/yoOv4wUAFYQrZ8ZoC3gPZ8GWGvheyABEiAc4AKSc/BhPNQpigAAAABJRU5ErkJggg==','west':'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAArklEQVR4nO2V3QrAIAiFT2MP7pu7iyBG4E/acBcJsbGO+eXMGgBGoV2VwQ/AAfgFwL3uQsn5MABNz6yuW4PZiNYWjPixPGi8M2s6KDqyfOzgOQAdovwUAI7dI50BOQvlGUgB8IaL3A3Qmh2Ques+AZCCZbNQXgOAsw/gVeFzpUvftbUQOQVayiP/f/jKw98PIrsHwOWXkQNgFcSrWwaYA0Tn0wB7rbwPHIADUA7wAP5g2nPOprwIAAAAAElFTkSuQmCC','matches':'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAABBklEQVR4nO1WSQ6DMAycVP1X8rMOP0te5l5YAphsBFFVWOJgiJnxeAEDQHCjve4Efwj8BIF3ayDJbjHScomIEBCJpujIJykk1fc0lYAkBmPwie8BkvKPrJoASZA0GOU0gBkfqP6QKVWrAkLSTGA5P2UGFZuwpfFyccVTQBLOuWJQ733Rucv3QE61IgWm7K2iQFAyLc0eKFAgBg/er6Y4eL8jFYOX9ExSgS24tQ4hLADWupmEpkSJde2B2uyBhAJx18dZWuvmMyHo2deMq0pAGzmt3hYLeE3jxbZbRLXzvgWvXVa3/w+sFGhdtWfiuynQSv72EnQhcKZ0VZ/jK+w/SvAQeAicsS/Bxp9mUgExCQAAAABJRU5ErkJggg==','burger':'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAABWUlEQVR4nM1X27LDIAhcM/1vN1+ePmToQQIEm7Y5O5Nx5KILUdQGYMMEyGt6i1YhEA3aO7Cu18ikBLIBet/bjEBlnKXiJJNpeBP37ttmBNwMzP7HKrxxDxnwjHRUNkIv4kh3SoD8c9LOOt1R6j14tpbEYhXiVFlcmZ1HSmSaxGKV2SBZpFZXJdYAbN9adGcgk234KzwAgDcSWEICPMoZyAd7R0mjt3Yb9nVwS4ubJ99epVjqcVNpkX71vBZb7RP5N09vna2xR1TLLAkPVjdUwqbaVbWih5KTo99q/Gn8tL/uA5/+t3xzDci2oP5Uhxzl8lk/i0guyp1AaPFl8OZKSPyDs2Avxfz9xDJnmoGZ61amy650BwLRVUzrssk9P3ul0xkfCt87D5Czx4lFeCeMCMxEm6U6Gr/8LrCRXo1c4C5Czzj6rzPvBA+X3oaVjJxt8fJxP7tAq7XlCZj0K0SNMvykAAAAAElFTkSuQmCC','nailfile':'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAjElEQVR4nO2UQQ6AIAwEV+PD+7T9Wb0oSWOillaNKXsGZsgWgJHqmR48W+9w5ofAShIicrl4yYaTdG3IFgAAeCQyK1CSBr5VcDpnWQJd8CyBbniWgIkHniFgbu+FRwXC8IhACjwi0BKB90ZJqogo7H//T7ingsN7f1ugZfReBt4EBvwTgbLwXaAmvGZWTgp8vM61QxAAAAAASUVORK5CYII=','torch':'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAkUlEQVR4nO2WQQpDQQhDY082R/NomZOli0J3/aBNGfpRkMGF+MAYJgAIB+NxcvgADMAA2ACkvpV8DZCZ2Hu3+wMmJ5SEiCj32TQQEa1VWEXYgbBfQVUP9zjDAQBefnBV/xxgrQWS77cSciVJSRLJSp9neGZe1p/SKkKSkFRawX2uYAAG4G8BgMNOaPsTduP4Cp6azZdPpwpRyAAAAABJRU5ErkJggg==','torch_lit':'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAA50lEQVR4nO2XWw6FIAxEh7syltal1ZWNH9wgoOFlNdE40SimtSd9YAQqIkESrNmclWsB7Bxc3ccUAAAIbBiJtevwNQHYQRiD/LqsmAcFtzMc8+qmj4FSmKQ0s5noywCKAAc9MatugJImgpxsgiEAB4QhzFMPksBkLwxnIEKEe4gIlmWZiW0mAiBDGi7dNZsgj4SYm4KKRvvBHGBUrwIo697VB1YAFJHswX/dhDDLgPceqhqvd4sAqKokSVVNPtg3AYhIGjRdV2U6BaoKkkMleNUYfgAfwDMBLHW0EzZl+qNZBLV+9zVaAbU2c3x/SkMYAAAAAElFTkSuQmCC','flower':'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAA9ElEQVR4nO2WbQ6DIAyG22UH42bizfBk7IcfMV1b2opbNL4JiRDo+7QgigBQ4Y969QhS69wielsNAAAQ+f40lWVmOgcAEaCUshlwhin5zQGCWxA16waw11yZHwJwZy2lFH6VUIi5maFgro1XZo4ksQI9LgdLDBagkufMBNPGRxOeAtBTrSqcDtDSA2AGsB4szwE0AwzOoJ7519kCi7zlFwEsV6hkRsvfinWoAnuzSPYqACUfDCbe7FUAj0bG3CoVgMuAVkGqiiX7JgANRLMchXGr+TrX9enPpL+ae0yparjlA2uXZvot/1IOrWJ1r6v4AbgkwAdHOlMgXcb/kgAAAABJRU5ErkJggg==','key':'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAA+UlEQVR4nO1VW47EIAxzRnuvcjQfLZzM+7FNFVhm1U7p12IpSlsi7DwowMLCwn+HPbSvznK9HiCWJLg7so+1yXwtubtL0p9+loh+o1PkM0VIP3VVfj8rAoBIHiL0iaVM5O5nMj5iO/HXyhf+nY3ISR6WxZOU7R/utgQAsG0baq2NNzOgPYKSBDMDSbwAWCllioCevNb6Nm6Ej2YBN2YgD+IhIvoUlvuX1+I59/XqKRgJQE/cZ9uLyAKu/AeC/GsgwGKRpO2+V/orppQidx8OYvalFJAczsAMxF0wLDsGpR9V4A6MpPaj1yBnHVUDnruOR21riBcWFhYC367RS5nixqamAAAAAElFTkSuQmCC'};
+const V4_DIMS = {
+  1:[330,242],2:[330,242],3:[326,240],4:[332,235],5:[326,241],6:[329,244],7:[329,244],8:[328,242],9:[326,240],10:[327,240],11:[327,240],12:[326,241],13:[346,240],14:[346,240],15:[328,240],16:[327,239],17:[328,242],18:[328,242],19:[326,241],20:[373,306],21:[326,241],22:[326,241],23:[328,242],24:[328,243],25:[329,242],26:[328,243]
+};
+function V4R(sceneNo,id,x1,y1,x2,y2,extra={}){
+  const [w,h]=V4_DIMS[sceneNo];
+  return Object.assign({id,x:x1/w*100,y:y1/h*100,w:(x2-x1)/w*100,h:(y2-y1)/h*100},extra);
+}
+function v4NoExit(){ say("You can't go that way."); clearAction(); }
+function v4FenceBlocked(){ say("The fence blocks your path."); clearAction(); }
+
+// Original map recovered from NORTH/SOUTH/EAST/WEST handlers.
+scenes.entrance.exits={north:()=>goScene('fence'),south:v4NoExit,east:v4NoExit,west:v4NoExit};
+scenes.fence.exits={
+  north:()=>goScene('visitorOutside'),
+  south:v4NoExit,
+  east:()=>goScene('ranger4x4'),
+  west:()=>state.fenceCut?goScene('trex'):v4FenceBlocked()
+};
+scenes.ranger4x4.exits={north:()=>goScene('restaurantOutside'),south:v4NoExit,east:v4NoExit,west:()=>goScene('fence')};
+scenes.restaurantOutside.exits={north:()=>goScene('restaurantInside'),south:()=>goScene('ranger4x4'),east:v4NoExit,west:()=>goScene('visitorOutside')};
+scenes.visitorOutside.exits={north:()=>goScene('visitorInside'),south:()=>goScene('fence'),east:()=>goScene('restaurantOutside'),west:v4NoExit};
+scenes.restaurantInside.exits={north:v4NoExit,south:()=>goScene('restaurantOutside'),east:()=>goScene('kitchen'),west:v4NoExit};
+scenes.kitchen.exits={north:v4NoExit,south:v4NoExit,east:v4NoExit,west:()=>goScene('restaurantInside')};
+scenes.visitorInside.exits={north:v4NoExit,south:()=>goScene('visitorOutside'),east:v4NoExit,west:()=>goScene('control')};
+scenes.control.exits={north:v4NoExit,south:v4NoExit,east:()=>goScene('visitorInside'),west:v4NoExit};
+scenes.car.exits={north:()=>goScene('ranger4x4','You climb back out of the Ranger vehicle.'),south:v4NoExit,east:v4NoExit,west:v4NoExit};
+scenes.trex.exits={
+  north:()=>state.rexGone?goScene('maintenance'):die('Seeing your sudden movement the T-Rex quickly crushes you in its jaws'),
+  south:v4NoExit,
+  east:()=>goScene('fence'),
+  west:()=> (state.rexGone || state.rexDistracted) ? goScene('zookeeper') : die('The T-Rex, seeing you from behind the trees, crushes you in its jaws')
+};
+scenes.zookeeper.exits={north:()=>die('Not seeing the cliff ahead, you plunge 200 feet to your death'),south:v4NoExit,east:()=>goScene('trex'),west:v4NoExit};
+scenes.maintenance.exits={north:()=>state.maintenanceOpen?goScene('dock'):(say('The maintenance door is closed.'),clearAction()),south:()=>goScene('trex'),east:v4NoExit,west:v4NoExit};
+scenes.dock.exits={north:v4NoExit,south:()=>goScene('maintenance'),east:v4NoExit,west:v4NoExit};
+
+// Vehicle: exact glovebox/tape rectangles recovered from the original.
+scenes.car.description=()=>"You are inside the Ranger 4x4.";
+scenes.car.hotspots=()=>[
+  V4R(state.gloveboxOpen?2:1,'glovebox',256,137,326,166,{
+    examine:()=>state.gloveboxOpen&&!state.nailfileTaken?'in the recesses of the glove box there is a nailfile':'this is a glovebox',
+    operate:()=>{state.gloveboxOpen=true;renderScene();return 'you opened the glove box';},
+    take:()=>state.gloveboxOpen&&!state.nailfileTaken?takeItem('nailfile','you found a nailfile',()=>state.nailfileTaken=true):"you can't take that!"
+  }),
+  V4R(state.gloveboxOpen?2:1,'tape deck',188,142,246,149,{examine:()=>"This is the tape deck",operate:()=>"The tape deck plays:'The T-Rex is closing in on us, need the flo....' the voice goes dead"}),
+  {id:'radio',x:67,y:25,w:20,h:18,examine:()=>"The radio is blinking 12:00"},
+  {id:'instrument panel',x:4,y:23,w:35,h:33,examine:()=>"This is the instrament panel- There is no fuel"}
+];
+
+// Ranger 4x4 exterior. EXAMINE on the truck is the original route into it.
+scenes.ranger4x4.hotspots=()=>[
+  V4R(12,'Ranger 4x4',108,89,298,126,{
+    examine:()=>{goScene('car','Noticing the door was open you walk in');return '';},
+    operate:()=>"You can't operate that"
+  }),
+  V4R(12,'tree carving',249,133,259,204,{examine:()=>"There is a carving in the tree- N,N,S,L,R"})
+];
+
+// Kitchen exact tests recovered from P-code.
+scenes.kitchen.hotspots=()=>[
+  V4R(state.matchesTaken?9:8,'recipe',109,15,136,54,{examine:()=>"Tis is a recipe for prevention? It reads: An once of prevention is twelve from the right"}),
+  V4R(state.matchesTaken?9:8,'boiling pot',13,100,37,120,{examine:()=>"This is a pot of boiling liquid",take:()=>{die('As you reached for the liquid you clothes catch fire');return '';}}),
+  V4R(state.matchesTaken?9:8,'burger / pan',58,109,94,120,{examine:()=>state.burgerTaken?'this is an empty frying pan':'This is a frying pan.....It looks a if there is a hamburger in it',take:()=>state.burgerTaken?"you can't take that":takeItem('burger','you took the burger',()=>state.burgerTaken=true)}),
+  V4R(state.matchesTaken?9:8,'matches',151,118,169,125,{examine:()=>"This is a Box of Matches",take:()=>state.matchesTaken?'you already have that!':takeItem('matches','you took the matches',()=>state.matchesTaken=true)}),
+  V4R(state.matchesTaken?9:8,'sink',213,79,259,123,{examine:()=>"This is your run of the mill kitchen sink"}),
+  V4R(state.matchesTaken?9:8,'spice rack',117,81,151,113,{examine:()=>"This is a empty revolving spice rack"})
+];
+
+// Restaurant exterior: exact rare flower hitbox plus broad building/flower beds.
+scenes.restaurantOutside.hotspots=()=>[
+  V4R(state.flowerTaken?14:13,'restaurant',0,70,326,174,{examine:()=>"The World Famous Pre-Historic Restaurant, home of the T-Rex burger"}),
+  V4R(state.flowerTaken?14:13,'left flower bed',0,174,95,206,{examine:()=>"This is a flower Box full of flowers"}),
+  V4R(state.flowerTaken?14:13,'right flower bed',230,174,326,206,{examine:()=>"This is a flower Box full of flowers"}),
+  V4R(state.flowerTaken?14:13,'T-Rex Patunia',58,181,65,187,{examine:()=>"This is the lovely T-Rex Patunia",take:()=>state.flowerTaken?'you already have that!':takeItem('flower',' You took the rare T-Rex Patunia',()=>state.flowerTaken=true)})
+];
+
+// Park Center exterior: independently coded flags/windows.
+scenes.visitorOutside.hotspots=()=>[
+  V4R(15,'left flag',60,31,86,68,{examine:()=>"The Dinosaur Island flag hangs proudly from the roof"}),
+  V4R(15,'right flag',155,31,180,68,{examine:()=>"The Dinosaur Island flag hangs proudly from the roof"}),
+  V4R(15,'dinosaur sign',275,15,296,49,{examine:()=>"This is the Park Center sign"}),
+  V4R(15,'window 1',20,104,45,154,{examine:()=>"The glare from the window shines in your eyes"}),
+  V4R(15,'window 2',184,104,210,154,{examine:()=>"The glare from the window shines in your eyes"}),
+  V4R(15,'window 3',234,104,260,154,{examine:()=>"The glare from the window shines in your eyes"}),
+  V4R(15,'window 4',282,104,304,154,{examine:()=>"The glare from the window shines in your eyes"})
+];
+
+// Inside Park Center / museum.
+scenes.visitorInside.hotspots=()=>[
+  V4R(16,'T-Rex skull',255,86,292,112,{examine:()=>"Examining the skull of the great T-Rex you realize what an awesome killing machine it must have been"}),
+  V4R(16,'T-Rex skeleton',164,118,243,188,{examine:()=>"The T-rex measures 12 meters from head to tail"}),
+  V4R(16,'information plaque',22,180,42,200,{examine:()=>"The Tyrannosaurus Rex is the largest of the meat eating dinosaurs. The dinosaur was named by Henry Fairfield Osborn, after partial skeletal remains were found in montana in 1905"})
+];
+
+// Control room exact object rectangles. Password comparison is literally #25567ef.
+scenes.control.hotspots=()=>[
+  V4R(state.torchTaken?18:17,'clay flowerpot',12,80,57,109,{examine:()=>"This is a clay flower pot"}),
+  V4R(state.torchTaken?18:17,'green plant',15,0,59,79,{examine:()=>"This Green plant typifies the local fauna"}),
+  V4R(state.torchTaken?18:17,'computer',109,5,210,91,{examine:()=>"This computer is a 786!",operate:()=>{openLogin();return '';}}),
+  V4R(state.torchTaken?18:17,'burnt bulb',233,30,254,42,{examine:()=>"The bulb has burnt out"}),
+  V4R(state.torchTaken?18:17,'drawers',239,121,325,229,{examine:()=>"These Drawers are empty"}),
+  V4R(state.torchTaken?18:17,'filing cabinet',0,120,87,179,{
+    examine:()=>!state.torchTaken?'there is a blow torch inside':'This filing cabinet',
+    take:()=>!state.torchTaken?takeItem('torch','you found a blow torch',()=>{state.torchTaken=true;state.cabinetOpen=true;}):"you can't take that"
+  })
+];
+scenes.control.image=()=>state.torchTaken?18:17;
+
+// Fence: power and physical cut are separate original flags.
+scenes.fence.hotspots=()=>[
+  {id:'warning sign',x:33,y:48,w:26,h:27,examine:()=>"!DANGER! HIGH VOLTAGE series #25567ef"},
+  V4R(state.fenceCut?11:10,'electric fence',121,87,279,239,{
+    examine:()=>state.fencePowered?'This is the electric fence that keeps the dinosaurs in':'The hum is gone.  The fence is OFF!',
+    operate:(item)=>{
+      if(state.fenceCut)return 'You cut through then fence!';
+      if(item!=='nailfile')return "you can't operate that!";
+      if(state.fencePowered){die('You feel almost nothing as 10,000 volts rush through your body');return '';}
+      state.fenceCut=true;renderScene();return 'You cut through then fence!';
+    }
+  })
+];
+
+// T-Rex. Permanent disappearance is tied to the ranger story event; the flower
+// is kept as the route-enabling distraction implied by the tape clue while the
+// remaining generic OPERATE P-code is still being decoded.
+scenes.trex.hotspots=()=>[
+  V4R(state.rexGone?22:21,'T-Rex',153,42,325,214,{
+    examine:()=>state.rexGone?'The T-Rex is gone!':'The great T-Rex',
+    operate:(item)=>{
+      if(state.rexGone)return 'The T-Rex is gone!';
+      if(item==='flower'){
+        state.rexDistracted=true;
+        return 'The T-Rex is distracted by the T-Rex Patunia.';
+      }
+      die('Seeing your sudden movement the T-Rex quickly crushes you in its jaws');return '';
+    }
+  }),
+  V4R(state.rexGone?22:21,'palm tree',54,3,89,197,{examine:()=>"this is a pre historic palm tree"})
+];
+
+// Zoo keeper / ranger sequence and exact hat/key/tree hitboxes.
+scenes.zookeeper.hotspots=()=>{
+  if(!state.rangerGone)return [
+    V4R(23,'ranger',30,64,102,229,{
+      examine:()=>"HE Says -IM DEVRATS TON NETAE NI EVIF SYAD...., and some other mumbo jumbo",
+      operate:(item)=>{
+        if(item==='burger'){
+          state.rangerGone=true;state.rexGone=true;state.rexDistracted=false;state.inventory.burger=false;
+          renderScene();renderInventory();
+          return 'The ranger grabs the burger from your hand. You see the T Rex running off in the distance with the ranger in his mouth!';
+        }
+        return "You can't operate that";
+      }
+    }),
+    V4R(23,'tree carving',249,133,259,204,{examine:()=>"There is a carving in the tree- N,N,S,L,R"})
+  ];
+  if(!state.hatMoved)return [V4R(24,'hat',45,175,91,195,{examine:()=>"All that is left is his hat",operate:()=>{state.hatMoved=true;renderScene();return 'Moving the hat aside you see a key';}})];
+  if(!state.keyTaken)return [V4R(25,'key',57,179,82,196,{examine:()=>"This is a shiny key",take:()=>takeItem('key','you took the key',()=>state.keyTaken=true)})];
+  return [V4R(26,'hat',45,175,91,195,{examine:()=>"All that is left is his hat"})];
+};
+
+// Maintenance: key, not nail file.
+scenes.maintenance.hotspots=()=>[
+  V4R(state.maintenanceOpen?7:6,'maintenance lock / door',196,126,212,146,{
+    examine:()=>state.maintenanceOpen?'The maintenance door stands open.':'Maintenance door',
+    operate:(item)=>{
+      if(state.maintenanceOpen)return 'The door is already open.';
+      if(item==='key'){state.maintenanceOpen=true;renderScene();return 'The key fit perfectly';}
+      return "You can't operate that";
+    }
+  })
+];
+
+// The key is consumed by the maintenance puzzle in the recovered logic, so the
+// boat itself no longer incorrectly requires the key as V3 did.
+scenes.dock.hotspots=()=>[
+  {id:'boat',x:19,y:32,w:67,h:40,examine:()=>"A boat. This could be your way off Dinosaur Island.",operate:()=>{say('You made it out in the nick of time, congratulations');setTimeout(win,300);return 'You made it out in the nick of time, congratulations';}}
+];
+
+// Replace CSS-drawn inventory art with the original embedded icon resources.
+renderInventory=function(){
+  inventoryEl.innerHTML='';
+  Object.keys(itemNames).forEach(id=>{
+    const slot=document.createElement('button');
+    slot.className='item-slot'+(state.inventory[id]?' owned':'')+(state.selectedItem===id?' selected':'');
+    slot.disabled=!state.inventory[id];slot.dataset.item=id;
+    const icon=(id==='torch'&&state.torchLit)?V4_ICONS.torch_lit:V4_ICONS[id];
+    slot.innerHTML=`<img class="item-icon" src="${icon}" alt=""><span>${itemNames[id]}</span>`;
+    slot.addEventListener('click',()=>inventoryClick(id));inventoryEl.appendChild(slot);
+  });
+};
+
+// Re-render in case this script is added to an already-started session.
+if(!gameScreen.classList.contains('hidden')){renderScene();renderInventory();}
+</script>
+
 </body>
 </html>
