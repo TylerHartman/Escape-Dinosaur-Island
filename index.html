@@ -138,7 +138,7 @@ body{padding-left:max(5px,env(safe-area-inset-left));padding-right:max(5px,env(s
       <div class="message-block block"><div id="message"></div></div>
     </div>
     <div id="action-status" class="action-status"></div>
-    <div id="inventory" class="inventory"></div><div class="v4-proof">V19 — gameplay/dialogue strings verified against the original ESCAPE.EXE; source typos and wording preserved</div>
+    <div id="inventory" class="inventory"></div><div class="v4-proof">V20 — warning-sign hotspot fixed so the red lightning-bolt box is clickable over the larger fence hotspot</div>
   </section>
 
   <section id="game-over-screen" class="panel end-screen hidden">
@@ -873,7 +873,8 @@ scenes.control.image=()=>state.cabinetOpen?18:17;
 
 // Fence: hotspot text corrected to match the original game behavior.
 scenes.fence.hotspots=()=>[
-  V4R(state.fenceCut?11:10,'warning sign',120,146,167,197,{examine:()=>"!DANGER! HIGH VOLTAGE series #25567ef"}),
+  // Broad fence region first. The click handler checks hotspots in reverse order,
+  // so the smaller warning sign below gets priority where the two overlap.
   V4R(state.fenceCut?11:10,'electric fence',5,85,206,239,{
     examine:()=>state.fencePowered?'This is the electric fence that keeps the dinosaurs in':'The hum is gone.  The fence is OFF!',
     operate:(item)=>{
@@ -883,7 +884,9 @@ scenes.fence.hotspots=()=>[
       if(state.fencePowered){die('You feel almost nothing as 10,000 volts rush through your body');return '';}
       state.fenceCut=true;renderScene();return 'You cut through then fence!';
     }
-  })
+  }),
+  // Red lightning-bolt warning box: deliberately last so it wins overlap clicks.
+  V4R(state.fenceCut?11:10,'warning sign',116,142,171,202,{examine:()=>"!DANGER! HIGH VOLTAGE series #25567ef"})
 ];
 
 // T-Rex. Permanent disappearance is tied to the ranger story event; the flower
