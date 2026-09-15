@@ -3,7 +3,10 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Escape from Dinosaur Island — Browser Remake V6</title>
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<title>Escape from Dinosaur Island — Browser Remake V7</title>
 <style>
 :root{--panel:#bdbdbd;--hi:#fff;--mid:#d9d9d9;--shadow:#555;--deep:#202020;--text:#111}
 *{box-sizing:border-box}
@@ -41,9 +44,9 @@ button:disabled{cursor:default;color:#777;background:#aaa;filter:saturate(.2);op
 /* V4: original ESCAPE.EXE icon artwork */
 .verbs button,.directions button{display:flex;align-items:center;justify-content:center;gap:8px}
 .verbs button{min-height:68px;flex-direction:column;padding:5px 8px;font-size:13px}
-.directions button{min-height:58px;padding:4px}
+.directions button{min-height:58px;padding:6px;gap:0}
 .menu-icon{width:32px;height:32px;image-rendering:pixelated;image-rendering:crisp-edges;display:block;flex:none}
-.direction-icon{width:32px;height:32px;image-rendering:pixelated;image-rendering:crisp-edges;display:block}
+.direction-icon{width:40px;height:40px;image-rendering:pixelated;image-rendering:crisp-edges;display:block}
 .item-icon{width:32px!important;height:32px!important;object-fit:contain;image-rendering:pixelated;image-rendering:crisp-edges;position:static!important}
 .item-icon:before,.item-icon:after{display:none!important;content:none!important}
 .item-slot{min-height:70px}
@@ -90,6 +93,15 @@ body{padding-left:max(5px,env(safe-area-inset-left));padding-right:max(5px,env(s
   .head-controls{flex:none}
 }
 
+
+/* V7: icon-only direction pad */
+.directions button{font-size:0!important;line-height:0!important;aspect-ratio:1/1;min-height:0;width:100%;max-width:78px;justify-self:center}
+.directions .direction-icon{width:min(48px,70%);height:auto}
+@media(max-width:760px){
+  .directions button{max-width:86px;padding:8px}
+  .directions .direction-icon{width:min(52px,76%);height:auto}
+}
+
 </style>
 </head>
 <body>
@@ -118,10 +130,10 @@ body{padding-left:max(5px,env(safe-area-inset-left));padding-right:max(5px,env(s
         <button class="verb" data-verb="operate"><img class="menu-icon" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAABB0lEQVR4nMXWYQ6DIAwF4NfFg3m0dzRv1v2YOmDAWtZmJCTq1PdZhiLHcSj+1PZ9x3ZuiKp2ISJS7ZMMRWwAMAo/f0sFbd4LSlCLWQaIyMeT9lrGcJgrICLh4w8AD+uJqpoHIGkazwyEuQIXMBpxA0ZVKIMzEMMKjIKjERWgrMIsOGL+dwFeRHgFvIg0gAURVYHpm7BEtNuj8y3HzID2BtYn9lTG/CKyNpJ3/wvAiwgFtIEWREoFeogRxL0ium66crwHcVeAJBTo9m/l/hlwhY+aFbEEqMJVX30RsQR4J5zBQV/E9FkQDwhcC7gAJHFHTxCCxP9AhQgIdwNKRK+vrA8EmE7t7CZP9d23IkPt6ToAAAAASUVORK5CYII=" alt=""><span>OPERATE</span></button>
       </div>
       <div class="directions block">
-        <button class="dir north" data-dir="north"><img class="direction-icon" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAsElEQVR4nO2W6wqAMAiFNXrwvbn9GKsYOW8LCyZIwZx+LjoOAYAg0bbM4gtgAXwCYLdvKcF1N0DpntG4agiiENkSevYR7+V8J7qci3+OKYP8tXmx+L2AkIyJ4SHMfwG9MDnUxK076TNYcrp0AHHeSbiFqEFEQUJKiBg/jSlSHIGYNgsiEP/QgdbdqEtNzOM+3kUZVfg4R/owUgBYQbRxZoC+gHc9DDDX0u+EC2ABpAMc0c3ka6eEAj0AAAAASUVORK5CYII=" alt="NORTH"><span>NORTH</span></button>
-        <button class="dir west" data-dir="west"><img class="direction-icon" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAArklEQVR4nO2V3QrAIAiFT2MP7pu7iyBG4E/acBcJsbGO+eXMGgBGoV2VwQ/AAfgFwL3uQsn5MABNz6yuW4PZiNYWjPixPGi8M2s6KDqyfOzgOQAdovwUAI7dI50BOQvlGUgB8IaL3A3Qmh2Ques+AZCCZbNQXgOAsw/gVeFzpUvftbUQOQVayiP/f/jKw98PIrsHwOWXkQNgFcSrWwaYA0Tn0wB7rbwPHIADUA7wAP5g2nPOprwIAAAAAElFTkSuQmCC" alt="WEST"><span>WEST</span></button>
-        <button class="dir east" data-dir="east"><img class="direction-icon" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAo0lEQVR4nO2V3QqAMAiFj9GD783tYhAxclO3YYHCoWD+fFg6AsAItCOyeAIkwCcATntImTx3A5TmOetXjTBcRLaEzACRLY5llfudWS8ph6Bx8SfEIJngI0Msn4LafpupiTUdkPWe8397gDsz42m/GcBTpGfhnyAcAFi8B7S5sGsKej+pGCNr/yoOv4wUAFYQrZ8ZoC3gPZ8GWGvheyABEiAc4AKSc/BhPNQpigAAAABJRU5ErkJggg==" alt="EAST"><span>EAST</span></button>
-        <button class="dir south" data-dir="south"><img class="direction-icon" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAt0lEQVR4nO2V3Q6AIAiFD60H983pwgudpR6kRheysbbk54MhCgBFoByRyTfABvgFwGl3Sc7zZYDUfL12WQTTRWQLuOKnfU23f6pjZWI0yiXvJ3gGZCGoGVAFRBjLYmfxoarvVcDrcxeoPSCSK/pC6GvIQrBtNwOwwWtIxn5hE46lTsoMYvhbAEym1nMDiq9jD7TDN2updQYwruL7VRz+GBEAVhDWzgzQJlg9dwO8K+F7YANsgHCAC7nE8nXQ7CN/AAAAAElFTkSuQmCC" alt="SOUTH"><span>SOUTH</span></button>
+        <button class="dir north" data-dir="north" aria-label="North" title="North"><img class="direction-icon" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAsElEQVR4nO2W6wqAMAiFNXrwvbn9GKsYOW8LCyZIwZx+LjoOAYAg0bbM4gtgAXwCYLdvKcF1N0DpntG4agiiENkSevYR7+V8J7qci3+OKYP8tXmx+L2AkIyJ4SHMfwG9MDnUxK076TNYcrp0AHHeSbiFqEFEQUJKiBg/jSlSHIGYNgsiEP/QgdbdqEtNzOM+3kUZVfg4R/owUgBYQbRxZoC+gHc9DDDX0u+EC2ABpAMc0c3ka6eEAj0AAAAASUVORK5CYII=" alt="NORTH"></button>
+        <button class="dir west" data-dir="west" aria-label="West" title="West"><img class="direction-icon" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAArklEQVR4nO2V3QrAIAiFT2MP7pu7iyBG4E/acBcJsbGO+eXMGgBGoV2VwQ/AAfgFwL3uQsn5MABNz6yuW4PZiNYWjPixPGi8M2s6KDqyfOzgOQAdovwUAI7dI50BOQvlGUgB8IaL3A3Qmh2Ques+AZCCZbNQXgOAsw/gVeFzpUvftbUQOQVayiP/f/jKw98PIrsHwOWXkQNgFcSrWwaYA0Tn0wB7rbwPHIADUA7wAP5g2nPOprwIAAAAAElFTkSuQmCC" alt="WEST"></button>
+        <button class="dir east" data-dir="east" aria-label="East" title="East"><img class="direction-icon" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAo0lEQVR4nO2V3QqAMAiFj9GD783tYhAxclO3YYHCoWD+fFg6AsAItCOyeAIkwCcATntImTx3A5TmOetXjTBcRLaEzACRLY5llfudWS8ph6Bx8SfEIJngI0Msn4LafpupiTUdkPWe8397gDsz42m/GcBTpGfhnyAcAFi8B7S5sGsKej+pGCNr/yoOv4wUAFYQrZ8ZoC3gPZ8GWGvheyABEiAc4AKSc/BhPNQpigAAAABJRU5ErkJggg==" alt="EAST"></button>
+        <button class="dir south" data-dir="south" aria-label="South" title="South"><img class="direction-icon" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAt0lEQVR4nO2V3Q6AIAiFD60H983pwgudpR6kRheysbbk54MhCgBFoByRyTfABvgFwGl3Sc7zZYDUfL12WQTTRWQLuOKnfU23f6pjZWI0yiXvJ3gGZCGoGVAFRBjLYmfxoarvVcDrcxeoPSCSK/pC6GvIQrBtNwOwwWtIxn5hE46lTsoMYvhbAEym1nMDiq9jD7TDN2updQYwruL7VRz+GBEAVhDWzgzQJlg9dwO8K+F7YANsgHCAC7nE8nXQ7CN/AAAAAElFTkSuQmCC" alt="SOUTH"></button>
       </div>
       <div class="message-block block"><div id="message"></div></div>
     </div>
