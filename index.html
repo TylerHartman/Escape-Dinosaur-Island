@@ -47,8 +47,8 @@ button:disabled{cursor:default;color:#777;background:#aaa;filter:saturate(.2);op
 .directions button{min-height:58px;padding:6px;gap:0}
 .menu-icon{width:32px;height:32px;image-rendering:pixelated;image-rendering:crisp-edges;display:block;flex:none}
 .direction-icon{width:40px;height:40px;image-rendering:pixelated;image-rendering:crisp-edges;display:block}
-.item-icon{width:32px!important;height:32px!important;display:block;position:relative!important;image-rendering:pixelated;image-rendering:crisp-edges;background:transparent!important;flex:0 0 auto}
-.item-icon:before,.item-icon:after{display:block!important}
+.item-icon{width:32px!important;height:32px!important;object-fit:contain;image-rendering:pixelated;image-rendering:crisp-edges;position:static!important}
+.item-icon:before,.item-icon:after{display:none!important;content:none!important}
 .item-slot{min-height:70px}
 .item-slot:not(.owned) .item-icon,.item-slot:not(.owned) .item-label{filter:grayscale(1) blur(1.8px);opacity:.26}
 .item-slot.owned .item-icon,.item-slot.owned .item-label{filter:none;opacity:1}
@@ -138,7 +138,7 @@ body{padding-left:max(5px,env(safe-area-inset-left));padding-right:max(5px,env(s
       <div class="message-block block"><div id="message"></div></div>
     </div>
     <div id="action-status" class="action-status"></div>
-    <div id="inventory" class="inventory"></div><div class="v4-proof">V26 — restaurant price-note hotspot expanded to cover the full note</div>
+    <div id="inventory" class="inventory"></div><div class="v4-proof">V28 — restored original inventory item icons</div>
   </section>
 
   <section id="game-over-screen" class="panel end-screen hidden">
@@ -818,9 +818,9 @@ scenes.ranger4x4.hotspots=()=>[
 // Kitchen exact tests recovered from P-code.
 scenes.kitchen.hotspots=()=>[
   V4R(state.matchesTaken?9:8,'recipe',109,15,136,54,{examine:()=>'This is a recipe for prevention. It reads: "An ounce of prevention is twelve from the right."'}),
-  // Expanded to cover the whole visible steaming pot rather than only its lower edge.
-  V4R(state.matchesTaken?9:8,'boiling pot',8,84,48,125,{examine:()=>"This is a pot of boiling liquid.",take:()=>{die('As you reach for the liquid, your clothes catch fire.');return '';}}),
-  // Expanded across the complete frying pan and handle.
+  // Broad steaming-pot region. This includes the pot itself and the rising steam.
+  V4R(state.matchesTaken?9:8,'boiling pot',6,70,108,132,{examine:()=>"This is a pot of boiling liquid.",take:()=>{die('As you reach for the liquid, your clothes catch fire.');return '';}}),
+  // Pan comes after the pot, so it wins overlap clicks on the actual frying pan.
   V4R(state.matchesTaken?9:8,'burger / pan',48,98,114,126,{examine:()=>state.burgerTaken?'This is an empty frying pan.':'This is a frying pan. It looks as if there is a hamburger in it.',take:()=>state.burgerTaken?"You can't take that.":takeItem('burger','You took the burger.',()=>state.burgerTaken=true)}),
   V4R(state.matchesTaken?9:8,'matches',151,118,169,125,{examine:()=>"This is a box of matches.",take:()=>state.matchesTaken?'You already have that!':takeItem('matches','You took the matches.',()=>state.matchesTaken=true)}),
   V4R(state.matchesTaken?9:8,'sink',213,79,259,123,{examine:()=>"This is your run-of-the-mill kitchen sink."}),
@@ -948,18 +948,16 @@ scenes.dock.hotspots=()=>[
   {id:'boat',x:19,y:32,w:67,h:40,examine:()=>"A small boat. This could be your way off Dinosaur Island.",operate:()=>{say('You made it out in the nick of time. Congratulations!');setTimeout(win,300);return 'You made it out in the nick of time. Congratulations!';}}
 ];
 
-// Use clean CSS-drawn inventory icons so item art does not show black matte edges.
+// Restore the original extracted inventory icon resources.
 renderInventory=function(){
   inventoryEl.innerHTML='';
   Object.keys(itemNames).forEach(id=>{
     const slot=document.createElement('button');
     slot.className='item-slot'+(state.inventory[id]?' owned':'')+(state.selectedItem===id?' selected':'');
-    slot.disabled=!state.inventory[id];
-    slot.dataset.item=id;
-    const torchClass=(id==='torch'&&state.torchLit)?' torch lit':' '+id;
-    slot.innerHTML=`<span class="item-icon${torchClass}" aria-hidden="true"></span><span class="item-label">${itemNames[id]}</span>`;
-    slot.addEventListener('click',()=>inventoryClick(id));
-    inventoryEl.appendChild(slot);
+    slot.disabled=!state.inventory[id];slot.dataset.item=id;
+    const icon=(id==='torch'&&state.torchLit)?V4_ICONS.torch_lit:V4_ICONS[id];
+    slot.innerHTML=`<img class="item-icon" src="${icon}" alt=""><span class="item-label">${itemNames[id]}</span>`;
+    slot.addEventListener('click',()=>inventoryClick(id));inventoryEl.appendChild(slot);
   });
 };
 
