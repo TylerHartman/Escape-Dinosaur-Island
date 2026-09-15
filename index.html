@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Escape from Dinosaur Island — Browser Remake V5</title>
+<title>Escape from Dinosaur Island — Browser Remake V6</title>
 <style>
 :root{--panel:#bdbdbd;--hi:#fff;--mid:#d9d9d9;--shadow:#555;--deep:#202020;--text:#111}
 *{box-sizing:border-box}
@@ -51,6 +51,45 @@ button:disabled{cursor:default;color:#777;background:#aaa;filter:saturate(.2);op
 .item-slot.owned .item-icon,.item-slot.owned .item-label{filter:none;opacity:1}
 .v4-proof{font-size:10px;color:#333;text-align:right;margin-top:4px}
 
+
+
+/* V6 mobile-width/layout correction */
+html,body{width:100%;max-width:100%;overflow-x:hidden}
+body{padding-left:max(5px,env(safe-area-inset-left));padding-right:max(5px,env(safe-area-inset-right))}
+#app{width:100%;max-width:1040px;min-width:0;margin:0 auto}
+.panel{width:100%;max-width:100%;min-width:0;overflow:hidden}
+.scene-wrap{width:100%;max-width:100%;min-width:0}
+#scene-image{width:100%;max-width:100%;height:auto;min-width:0;object-fit:contain}
+.controls-row{width:100%;max-width:100%;min-width:0}
+.controls-row>.block{min-width:0;max-width:100%}
+.verbs,.directions,.message-block{min-width:0;max-width:100%}
+.verbs button,.directions button{min-width:0;max-width:100%;overflow:hidden}
+.inventory{width:100%;max-width:100%;min-width:0}
+.item-slot{min-width:0;max-width:100%;overflow:hidden}
+
+/* Make undiscovered inventory genuinely unreadable until collected. */
+.item-slot:not(.owned) .item-icon{filter:grayscale(1) blur(5px)!important;opacity:.42!important}
+.item-slot:not(.owned) .item-label{filter:blur(3.5px)!important;opacity:.45!important;user-select:none}
+.item-slot.owned .item-icon,.item-slot.owned .item-label{filter:none!important;opacity:1!important}
+
+@media(max-width:760px){
+  body{padding-top:5px;padding-bottom:5px}
+  #app{width:100%;max-width:none}
+  .panel{padding:6px}
+  .controls-row{grid-template-columns:minmax(0,1fr) minmax(0,1fr)!important;gap:8px}
+  .controls-row>.block{width:100%;min-width:0}
+  .message-block{grid-column:1/-1!important;width:100%}
+  .verbs{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
+  .directions{grid-template-columns:minmax(0,1fr) minmax(0,1fr) minmax(0,1fr)}
+  .directions button{font-size:clamp(10px,3.2vw,14px);gap:4px;padding:4px 2px}
+  .verbs button{font-size:clamp(11px,3.3vw,14px);padding:4px 3px}
+  .menu-icon,.direction-icon{width:30px;height:30px}
+  .inventory{grid-template-columns:repeat(3,minmax(0,1fr))!important}
+  .item-slot{font-size:clamp(9px,2.8vw,11px);padding:5px 2px}
+  .game-head{width:100%;min-width:0}
+  .head-controls{flex:none}
+}
+
 </style>
 </head>
 <body>
@@ -87,7 +126,7 @@ button:disabled{cursor:default;color:#777;background:#aaa;filter:saturate(.2);op
       <div class="message-block block"><div id="message"></div></div>
     </div>
     <div id="action-status" class="action-status"></div>
-    <div id="inventory" class="inventory"></div><div class="v4-proof">V5 — map/hotspots reconstructed from original VB3 binary; icons extracted from ESCAPE.EXE</div>
+    <div id="inventory" class="inventory"></div><div class="v4-proof">V6 — mobile-width fix; map/hotspots reconstructed from original VB3 binary; icons extracted from ESCAPE.EXE</div>
   </section>
 
   <section id="game-over-screen" class="panel end-screen hidden">
