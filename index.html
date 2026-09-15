@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Escape from Dinosaur Island — Browser Remake V4</title>
+<title>Escape from Dinosaur Island — Browser Remake V5</title>
 <style>
 :root{--panel:#bdbdbd;--hi:#fff;--mid:#d9d9d9;--shadow:#555;--deep:#202020;--text:#111}
 *{box-sizing:border-box}
@@ -19,8 +19,8 @@ button:disabled{cursor:default;color:#777;background:#aaa;filter:saturate(.2);op
 .title-art{display:block;width:min(600px,88vw);max-height:58vh;object-fit:contain;image-rendering:pixelated;margin:0 auto 20px;border:3px inset #aaa;background:#000}
 .start-buttons{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}.small-note{margin-top:16px;font-size:12px;color:#444}
 .game-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px;font-size:18px}.head-controls{display:flex;gap:6px}.head-controls button{font-size:12px;min-height:30px;padding:7px 9px}
-.scene-wrap{position:relative;background:#000;border:3px inset #aaa;display:flex;align-items:center;justify-content:center;min-height:240px;overflow:hidden}
-#scene-image{display:block;max-width:100%;width:auto;height:min(53vh,540px);min-height:240px;object-fit:contain;image-rendering:pixelated;cursor:crosshair;user-select:none}
+.scene-wrap{position:relative;background:#000;border:3px inset #aaa;display:flex;align-items:center;justify-content:center;min-height:240px;overflow:hidden;width:100%}
+#scene-image{display:block;width:100%;height:auto;min-height:240px;max-height:min(53vh,540px);object-fit:contain;image-rendering:pixelated;cursor:crosshair;user-select:none}
 #debug-overlay{position:absolute;inset:0;pointer-events:none}.debug-hotspot{position:absolute;border:2px solid #f0f;background:#f0f3;color:#fff;font-size:10px;overflow:hidden}
 .controls-row{display:grid;grid-template-columns:1.05fr .92fr 1.4fr;gap:10px;margin-top:9px}.block{border:3px groove #eee;background:#aaa;padding:8px}
 .verbs{display:grid;grid-template-columns:1fr 1fr;gap:8px}.directions{display:grid;grid-template-columns:1fr 1fr 1fr;grid-template-rows:auto auto auto;gap:5px;align-items:center}.directions .north{grid-column:2}.directions .west{grid-column:1;grid-row:2}.directions .east{grid-column:3;grid-row:2}.directions .south{grid-column:2;grid-row:3}.directions button{font-size:14px;padding:9px 5px;min-height:38px}
@@ -47,8 +47,8 @@ button:disabled{cursor:default;color:#777;background:#aaa;filter:saturate(.2);op
 .item-icon{width:32px!important;height:32px!important;object-fit:contain;image-rendering:pixelated;image-rendering:crisp-edges;position:static!important}
 .item-icon:before,.item-icon:after{display:none!important;content:none!important}
 .item-slot{min-height:70px}
-.item-slot:not(.owned) .item-icon{filter:grayscale(1);opacity:.22}
-.item-slot.owned .item-icon{filter:none;opacity:1}
+.item-slot:not(.owned) .item-icon,.item-slot:not(.owned) .item-label{filter:grayscale(1) blur(1.8px);opacity:.26}
+.item-slot.owned .item-icon,.item-slot.owned .item-label{filter:none;opacity:1}
 .v4-proof{font-size:10px;color:#333;text-align:right;margin-top:4px}
 
 </style>
@@ -87,7 +87,7 @@ button:disabled{cursor:default;color:#777;background:#aaa;filter:saturate(.2);op
       <div class="message-block block"><div id="message"></div></div>
     </div>
     <div id="action-status" class="action-status"></div>
-    <div id="inventory" class="inventory"></div><div class="v4-proof">V4 — map/hotspots reconstructed from original VB3 binary; icons extracted from ESCAPE.EXE</div>
+    <div id="inventory" class="inventory"></div><div class="v4-proof">V5 — map/hotspots reconstructed from original VB3 binary; icons extracted from ESCAPE.EXE</div>
   </section>
 
   <section id="game-over-screen" class="panel end-screen hidden">
@@ -880,7 +880,7 @@ renderInventory=function(){
     slot.className='item-slot'+(state.inventory[id]?' owned':'')+(state.selectedItem===id?' selected':'');
     slot.disabled=!state.inventory[id];slot.dataset.item=id;
     const icon=(id==='torch'&&state.torchLit)?V4_ICONS.torch_lit:V4_ICONS[id];
-    slot.innerHTML=`<img class="item-icon" src="${icon}" alt=""><span>${itemNames[id]}</span>`;
+    slot.innerHTML=`<img class="item-icon" src="${icon}" alt=""><span class="item-label">${itemNames[id]}</span>`;
     slot.addEventListener('click',()=>inventoryClick(id));inventoryEl.appendChild(slot);
   });
 };
