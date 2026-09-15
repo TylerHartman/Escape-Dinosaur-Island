@@ -1,5 +1,4 @@
 <!doctype html>
-<!-- Self-contained browser build: all graphics, audio, CSS and JavaScript are embedded in this file. -->
 <html lang="en">
 <head>
 <meta charset="utf-8">
@@ -141,7 +140,7 @@ const music = $("#music");
 const congrats = $("#congrats");
 const debugOverlay = $("#debug-overlay");
 const initialState = () => ({
-    scene: "car",
+    scene: "entrance",
     verb: null,
     selectedItem: null,
     inventory: { matches: false, burger: false, nailfile: false, torch: false, flower: false, key: false },
@@ -213,15 +212,27 @@ function operateGeneric(item) {
         return "You can't operate that!";
     return "nothing happened when you used that";
 }
+// GEOGRAPHY AUDIT
+// ----------------
+// Cardinal routes are defined deliberately and checked as reversible pairs:
+// Entrance N <-> Ranger S; Entrance W <-> Maintenance E.
+// Ranger E <-> Restaurant W; Ranger N <-> Fence S.
+// Restaurant N <-> Restaurant Interior S; Restaurant E <-> Park Center W.
+// Restaurant Interior N <-> Kitchen S.
+// Park Center N <-> Museum S; Museum E <-> Control Room W.
+// Maintenance N <-> Control Room S (service-tunnel shortcut).
+// Fence N <-> T-Rex S; T-Rex N <-> Zoo Keeper S; Zoo Keeper N <-> Dock S.
+// The Ranger vehicle interior is nested at the Ranger scene: OPERATE truck enters it, SOUTH exits it.
+// Conditional barriers (closed maintenance door, uncut fence, live T-Rex, missing key) do not alter geography.
 const scenes = {
     car: {
         title: "Abandoned vehicle",
-        description: () => "You are inside an abandoned vehicle. The island entrance lies to the north.",
+        description: () => "You are inside the Ranger 4x4. Going south returns you to the road.",
         image: () => state.gloveboxOpen ? 2 : 1,
+        // The vehicle interior is a nested location at the Ranger 4x4, not a map starting point.
         exits: {
-            north: () => goScene("entrance"),
-            south: () => die("Not seeing the cliff ahead, you plunge 200 feet to your death"),
-            east: noExit, west: noExit
+            south: () => goScene("ranger4x4", "You climb back out of the Ranger vehicle."),
+            north: noExit, east: noExit, west: noExit
         },
         hotspots: () => [
             { id: "glovebox", x: 47, y: 44, w: 30, h: 20,
@@ -238,8 +249,12 @@ const scenes = {
         title: "Entrance",
         description: () => "You have arrived at the entrance to DINOSAUR ISLAND. In the distance you hear a roar of the mighty T-Rex. Is it safe to enter?",
         image: () => 4,
+        // Main map origin. The park path continues north; the maintenance entrance is west.
         exits: {
-            south: () => goScene("car"), north: () => goScene("restaurantOutside"), west: () => goScene("maintenance"), east: () => goScene("ranger4x4")
+            north: () => goScene("ranger4x4"),
+            south: () => die("Not seeing the cliff ahead, you plunge 200 feet to your death"),
+            west: () => goScene("maintenance"),
+            east: noExit
         },
         hotspots: () => [
             { id: "welcome", x: 27, y: 14, w: 46, h: 25, examine: () => "this is the welcome sign" },
@@ -252,9 +267,9 @@ const scenes = {
         description: () => "you are at the maintenance tunnel entrance",
         image: () => state.maintenanceOpen ? 7 : 6,
         exits: {
-            east: () => goScene("entrance"), south: () => goScene("entrance"),
+            east: () => goScene("entrance"),
             north: () => state.maintenanceOpen ? goScene("control", "Noticing the door was open you walk in") : (say("The maintenance door is closed."), clearAction()),
-            west: noExit
+            south: noExit, west: noExit
         },
         hotspots: () => [
             { id: "door", x: 31, y: 21, w: 35, h: 68, examine: () => state.maintenanceOpen ? "The maintenance door stands open." : "Maintenance door",
@@ -274,7 +289,7 @@ const scenes = {
         title: "Outside the restaurant",
         description: () => "You are outside the restaurant.",
         image: () => state.flowerTaken ? 14 : 13,
-        exits: { south: () => goScene("entrance"), north: () => goScene("restaurantInside"), east: () => goScene("visitorOutside"), west: () => goScene("ranger4x4") },
+        exits: { west: () => goScene("ranger4x4"), east: () => goScene("visitorOutside"), north: () => goScene("restaurantInside"), south: noExit },
         hotspots: () => [
             { id: "restaurant", x: 20, y: 18, w: 64, h: 75, examine: () => "The World Famous Pre-Historic Restaurant, home of the T-Rex burger" },
             { id: "flag", x: 45, y: 13, w: 12, h: 29, examine: () => "The Dinosaur Island flag hangs proudly from the roof" },
@@ -316,7 +331,7 @@ const scenes = {
         title: "Visitors centre",
         description: () => "Your travels bring you to the main building of Dinosaur Island. Thats odd, still no signs of life.",
         image: () => 15,
-        exits: { west: () => goScene("restaurantOutside"), north: () => goScene("visitorInside"), south: () => goScene("restaurantOutside"), east: noExit },
+        exits: { west: () => goScene("restaurantOutside"), north: () => goScene("visitorInside"), south: noExit, east: noExit },
         hotspots: () => [
             { id: "building", x: 18, y: 22, w: 73, h: 73, examine: () => "The Park Center appears deserted." },
             { id: "flags", x: 0, y: 8, w: 100, h: 30, examine: () => "The Dinosaur Island flag hangs proudly from the roof" }
@@ -337,7 +352,7 @@ const scenes = {
         title: "Control room",
         description: () => "Walking through the doorway marked 'staff only', you end up in the main office",
         image: () => state.cabinetOpen ? 18 : 17,
-        exits: { west: () => goScene("visitorInside"), south: () => goScene("visitorInside"), east: noExit, north: noExit },
+        exits: { west: () => goScene("visitorInside"), south: () => goScene("maintenance"), east: noExit, north: noExit },
         hotspots: () => [
             { id: "computer", x: 33, y: 0, w: 35, h: 43, examine: () => "This computer is a 786!", operate: () => { openLogin(); return ""; } },
             { id: "plant", x: 0, y: 0, w: 28, h: 45, examine: () => "This Green plant typifies the local fauna" },
@@ -353,9 +368,10 @@ const scenes = {
         title: "Ranger",
         description: () => "A large 4x4 with the markings 'RANGER' stands before you.",
         image: () => 12,
-        exits: { east: () => goScene("restaurantOutside"), north: () => goScene("fence"), west: () => goScene("entrance"), south: () => goScene("entrance") },
+        exits: { south: () => goScene("entrance"), north: () => goScene("fence"), east: () => goScene("restaurantOutside"), west: noExit },
         hotspots: () => [
-            { id: "truck", x: 4, y: 34, w: 92, h: 63, examine: () => "A large 4x4 with the markings 'RANGER' stands before you." },
+            { id: "truck", x: 4, y: 34, w: 92, h: 63, examine: () => "A large 4x4 with the markings 'RANGER' stands before you.", operate: (item) => { if (item)
+                    return "nothing happened when you used that"; goScene("car", "You climb inside the Ranger vehicle."); return ""; } },
             { id: "tree", x: 0, y: 0, w: 25, h: 70, examine: () => "There is a carving in the tree- N,N,S,L,R" }
         ]
     },
