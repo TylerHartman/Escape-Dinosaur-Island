@@ -138,7 +138,7 @@ body{padding-left:max(5px,env(safe-area-inset-left));padding-right:max(5px,env(s
       <div class="message-block block"><div id="message"></div></div>
     </div>
     <div id="action-status" class="action-status"></div>
-    <div id="inventory" class="inventory"></div><div class="v4-proof">V10 — lit blowtorch now cuts the fence; nail file remains for the filing cabinet; original icons from ESCAPE.EXE</div>
+    <div id="inventory" class="inventory"></div><div class="v4-proof">V19 — gameplay/dialogue strings verified against the original ESCAPE.EXE; source typos and wording preserved</div>
   </section>
 
   <section id="game-over-screen" class="panel end-screen hidden">
@@ -168,9 +168,10 @@ login:</pre>
 
 <div id="help-modal" class="modal hidden"><div class="modal-box text-modal">
   <h2>INSTRUCTIONS</h2>
-  <p>To move between scenes first click the <b>GO</b> button followed by a direction button.</p>
-  <p>To use one of the action buttons — <b>TAKE</b>, <b>OPERATE</b>, <b>GO</b>, <b>EXAMINE</b> — first click the appropriate button and then an object. This must be repeated each time you perform an action.</p>
-  <p>To use an inventory item, click <b>OPERATE</b>, click the item, then click its target in the scene.</p>
+  <p>To move between scenes first click the go button followed by a direction button</p>
+  <p>To use one of the action buttons: (Take,Operate,Go,Examine)</p>
+  <p>You first click on the approriate icon and then on an object.  This must be repeated EACH time you perform an action.</p>
+  <p>I.E. you cannot click the examine button ONCE and then click SEVERAL objects, you must first click EXAMINE before clicking the object.</p>
   <button id="help-close">CLOSE</button>
 </div></div>
 
@@ -231,15 +232,19 @@ function setVerb(v) {
 }
 function clearAction() { setVerb(null); }
 function updateActionStatus() {
-    let t = "Choose an action.";
-    if (state.verb === "go")
-        t = "GO — choose a direction.";
-    if (state.verb === "examine")
-        t = "EXAMINE — click something in the scene or inventory.";
-    if (state.verb === "take")
-        t = "TAKE — click something in the scene.";
-    if (state.verb === "operate")
-        t = state.selectedItem ? `OPERATE THE ${itemNames[state.selectedItem].toUpperCase()} ON?` : "OPERATE — click an item, then its target.";
+    let t = "";
+    if (state.verb === "operate" && state.selectedItem) {
+        const prompts = {
+            burger: "OPERATE THE BURGER ON?",
+            key: "USE THE KEY ON?",
+            matches: "OPPERATE THE MATCHES ON?",
+            nailfile: "OPPERATE THE NAILFILE ON?",
+            flower: "OPERATE"
+        };
+        t = state.selectedItem === "torch"
+            ? (state.torchLit ? "OPERATE THE BLOW TORCH ON?" : "OPERATE THE UNLIT TORCH ON?")
+            : (prompts[state.selectedItem] || "");
+    }
     actionStatusEl.textContent = t;
 }
 function die(text) {
@@ -263,7 +268,7 @@ function goScene(id, msg) {
     renderScene();
     say(msg ?? scenes[id].description());
 }
-function noExit() { say("You can't go that way."); clearAction(); }
+function noExit() { clearAction(); }
 function useItemSuccess(id) {
     if (id === "burger") {
         state.inventory.burger = false;
@@ -274,7 +279,7 @@ function useItemSuccess(id) {
 }
 function operateGeneric(item) {
     if (!item)
-        return "You can't operate that!";
+        return "you can't operate that!";
     return "nothing happened when you used that";
 }
 // GEOGRAPHY AUDIT — road-informed map
@@ -306,12 +311,12 @@ function operateGeneric(item) {
 // outside. Conditional barriers do not change the underlying geography.
 const scenes = {
     car: {
-        title: "Abandoned vehicle",
-        description: () => "You are inside the Ranger 4x4. Going south steps back outside to the Ranger location.",
+        title: "Ranger",
+        description: () => "Noticing the door was open you walk in",
         image: () => state.gloveboxOpen ? 1 : 2,
         // The vehicle interior is a nested location at the Ranger 4x4, not a map starting point.
         exits: {
-            south: () => goScene("ranger4x4", "You climb back out of the Ranger vehicle."),
+            south: () => goScene("ranger4x4"),
             north: noExit, east: noExit, west: noExit
         },
         hotspots: () => [
@@ -319,7 +324,7 @@ const scenes = {
                 examine: () => state.gloveboxOpen && !state.nailfileTaken ? "in the recesses of the glove box there is a nailfile" : "this is a glovebox",
                 operate: () => { state.gloveboxOpen = true; renderScene(); return "you opened the glove box"; },
                 take: () => state.gloveboxOpen && !state.nailfileTaken ? takeItem("nailfile", "you found a nailfile", () => state.nailfileTaken = true) : "you can't take that!" },
-            { id: "tape", x: 50, y: 36, w: 19, h: 10, examine: () => "This is the tape deck", operate: () => "The tape deck plays:'The T-Rex is closing in on us, need the flo....' the voice goes dead" },
+            { id: "tape", x: 50, y: 36, w: 19, h: 10, examine: () => "nothing interesting", operate: () => "The tape deck plays:'The T-Rex is closing in on us, need the flo....' the voice goes dead" },
             { id: "radio", x: 67, y: 25, w: 20, h: 18, examine: () => "The radio is blinking 12:00" },
             { id: "panel", x: 4, y: 23, w: 35, h: 33, examine: () => "This is the instrament panel- There is no fuel" },
             { id: "mirror", x: 34, y: 4, w: 31, h: 12, examine: () => "This is the rearview mirror" }
@@ -327,7 +332,7 @@ const scenes = {
     },
     entrance: {
         title: "Entrance",
-        description: () => "You have arrived at the entrance to DINOSAUR ISLAND. In the distance you hear a roar of the mighty T-Rex. Is it safe to enter?",
+        description: () => " You have arrived at the entrance to DINOSAUR ISLAND.  In the distance you hear a roar of the mighty T-Rex.  Is it safe to enter?",
         image: () => 4,
         // Main map origin. The visible road bends east into the park.
         exits: {
@@ -348,18 +353,18 @@ const scenes = {
         image: () => state.maintenanceOpen ? 7 : 6,
         exits: {
             west: () => goScene("visitorOutside"),
-            north: () => state.maintenanceOpen ? goScene("control", "Noticing the door was open you walk in") : (say("The maintenance door is closed."), clearAction()),
+            north: () => state.maintenanceOpen ? goScene("control", "Noticing the door was open you walk in") : noExit(),
             south: noExit, east: noExit
         },
         hotspots: () => [
-            { id: "door", x: 31, y: 21, w: 35, h: 68, examine: () => state.maintenanceOpen ? "The maintenance door stands open." : "Maintenance door",
+            { id: "door", x: 31, y: 21, w: 35, h: 68, examine: () => "Maintenance door",
                 operate: (item) => {
                     if (state.maintenanceOpen)
-                        return "The door is already open.";
+                        return "nothing happened";
                     if (item === "nailfile") {
                         state.maintenanceOpen = true;
                         renderScene();
-                        return "The simple lock gives way to the nailfile.";
+                        return "there is a blow torch inside";
                     }
                     return operateGeneric(item);
                 } }
@@ -367,15 +372,15 @@ const scenes = {
     },
     restaurantOutside: {
         title: "Outside the restaurant",
-        description: () => "You are outside the restaurant.",
+        description: () => "You are outside the restaurant. ",
         image: () => state.flowerTaken ? 14 : 13,
         exits: { west: () => goScene("ranger4x4"), east: () => goScene("visitorOutside"), north: () => goScene("restaurantInside"), south: noExit },
         hotspots: () => [
-            { id: "restaurant", x: 20, y: 18, w: 64, h: 75, examine: () => "The World Famous Pre-Historic Restaurant, home of the T-Rex burger" },
+            { id: "restaurant", x: 20, y: 18, w: 64, h: 75, examine: () => "The World Famous Pre-Historic Restaurant, home of the T-Rex burger " },
             { id: "flag", x: 45, y: 13, w: 12, h: 29, examine: () => "The Dinosaur Island flag hangs proudly from the roof" },
             { id: "window", x: 2, y: 55, w: 94, h: 22, examine: () => "The glare from the window shines in your eyes" },
-            { id: "flowerbox", x: 0, y: 71, w: 100, h: 14, examine: () => "This is a flower Box full of flowers" },
-            { id: "flower", x: 12, y: 72, w: 20, h: 18, examine: () => "This is the lovely T-Rex Patunia",
+            { id: "flowerbox", x: 0, y: 71, w: 100, h: 14, examine: () => "This is a flower Box full of flowers " },
+            { id: "flower", x: 12, y: 72, w: 20, h: 18, examine: () => "The Creatous patunia ",
                 take: () => state.flowerTaken ? "you already have that!" : takeItem("flower", " You took the rare T-Rex Patunia", () => state.flowerTaken = true) }
         ]
     },
@@ -386,12 +391,12 @@ const scenes = {
         exits: { south: () => goScene("restaurantOutside"), north: () => goScene("kitchen"), east: noExit, west: noExit },
         hotspots: () => [
             { id: "menu", x: 36, y: 41, w: 28, h: 24, examine: () => "This is a menu, it reads: The world famous T-Rex burger, a staff favorite, $4.95. with pre-historic fries $6.50" },
-            { id: "pricenote", x: 73, y: 48, w: 16, h: 16, examine: () => "This note reads: The world famous T-Rex burger, a staff favorite, $4.95. with pre-historic fries $6.50" },
-            { id: "map", x: 66, y: 6, w: 25, h: 28, examine: () => "This Is the map of the island" },
+            { id: "map", x: 32, y: 4, w: 36, h: 27, examine: () => "This Is the map of the island" },
             { id: "burgerpic", x: 63, y: 5, w: 32, h: 34, examine: () => "This is picture of the famous T- Rex burger" },
             { id: "rexpic", x: 5, y: 5, w: 29, h: 34, examine: () => "The mighty T-Rex" },
             { id: "salad", x: 31, y: 46, w: 40, h: 35, examine: () => "This is the salad bar, The food here is plastic?" },
-            { id: "spice", x: 8, y: 53, w: 15, h: 25, examine: () => "This is a empty revolving spice rack" }
+            { id: "spice", x: 8, y: 53, w: 15, h: 25, examine: () => "This is a empty revolving spice rack" },
+            { id: "pricenote", x: 67, y: 70, w: 12, h: 12, examine: () => "This is a menu, it reads: The world famous T-Rex burger, a staff favorite, $4.95. with pre-historic fries $6.50" }
         ]
     },
     kitchen: {
@@ -410,11 +415,11 @@ const scenes = {
     },
     visitorOutside: {
         title: "Visitors centre",
-        description: () => "Your travels bring you to the main building of Dinosaur Island. Thats odd, still no signs of life.",
+        description: () => "Your travels bring you to the main building of Dinosaur Island.  Thats odd, still no signs of life.",
         image: () => 15,
         exits: { west: () => goScene("restaurantOutside"), east: () => goScene("maintenance"), north: () => goScene("visitorInside"), south: noExit },
         hotspots: () => [
-            { id: "building", x: 18, y: 22, w: 73, h: 73, examine: () => "The Park Center appears deserted." },
+            { id: "building", x: 18, y: 22, w: 73, h: 73, examine: () => "nothing out of the ordinary" },
             { id: "flags", x: 0, y: 8, w: 100, h: 30, examine: () => "The Dinosaur Island flag hangs proudly from the roof" }
         ]
     },
@@ -425,7 +430,7 @@ const scenes = {
         exits: { south: () => goScene("visitorOutside"), east: () => goScene("control"), north: noExit, west: noExit },
         hotspots: () => [
             { id: "skull", x: 60, y: 26, w: 27, h: 34, examine: () => "Examining the skull of the great T-Rex you realize what an awesome killing machine it must have been" },
-            { id: "skeleton", x: 25, y: 30, w: 65, h: 45, examine: () => "The T-rex measures 12 meters from head to tail" },
+            { id: "skeleton", x: 25, y: 30, w: 65, h: 45, examine: () => "The T-rex measures 12 meters from head to tail " },
             { id: "info", x: 1, y: 7, w: 98, h: 22, examine: () => "The Tyrannosaurus Rex is the largest of the meat eating dinosaurs. The dinosaur was named by Henry Fairfield Osborn, after partial skeletal remains were found in montana in 1905" }
         ]
     },
@@ -437,17 +442,17 @@ const scenes = {
         hotspots: () => [
             { id: "computer", x: 33, y: 0, w: 35, h: 43, examine: () => "This computer is a 786!", operate: () => { openLogin(); return ""; } },
             { id: "plant", x: 0, y: 0, w: 28, h: 45, examine: () => "This Green plant typifies the local fauna" },
-            { id: "flowerpot", x: 4, y: 25, w: 20, h: 17, examine: () => "This is a clay flower pot" },
-            { id: "lamp", x: 72, y: 0, w: 27, h: 31, examine: () => "The bulb has burnt out" },
+            { id: "flowerpot", x: 4, y: 25, w: 20, h: 17, examine: () => "This is a clay flower pot " },
+            { id: "lamp", x: 72, y: 0, w: 27, h: 31, examine: () => "The bulb has burnt out " },
             { id: "drawers", x: 73, y: 45, w: 27, h: 55, examine: () => "These Drawers are empty" },
-            { id: "cabinet", x: 0, y: 46, w: 31, h: 53, examine: () => state.cabinetOpen && !state.torchTaken ? "there is a blow torch inside" : "This filing cabinet",
+            { id: "cabinet", x: 0, y: 46, w: 31, h: 53, examine: () => state.cabinetOpen && !state.torchTaken ? "there is a blow torch inside" : "This filing cabinet ",
                 operate: (item) => {
                     if (state.cabinetOpen)
-                        return state.torchTaken ? "The filing cabinet is open." : "there is a blow torch inside";
+                        return state.torchTaken ? "This filing cabinet " : "there is a blow torch inside";
                     if (item === "nailfile") {
                         state.cabinetOpen = true;
                         renderScene();
-                        return "You pick the filing cabinet lock with the nail file";
+                        return "there is a blow torch inside";
                     }
                     return "You can't operate that";
                 },
@@ -461,7 +466,7 @@ const scenes = {
         exits: { west: () => goScene("entrance"), north: () => goScene("fence"), east: () => goScene("restaurantOutside"), south: noExit },
         hotspots: () => [
             { id: "truck", x: 4, y: 34, w: 92, h: 63, examine: () => "A large 4x4 with the markings 'RANGER' stands before you.", operate: (item) => { if (item)
-                    return "nothing happened when you used that"; goScene("car", "You climb inside the Ranger vehicle."); return ""; } },
+                    return "nothing happened when you used that"; goScene("car", "Noticing the door was open you walk in"); return ""; } },
             { id: "tree", x: 0, y: 0, w: 25, h: 70, examine: () => "There is a carving in the tree- N,N,S,L,R" }
         ]
     },
@@ -469,13 +474,13 @@ const scenes = {
         title: "Electric fence",
         description: () => state.fencePowered ? " Hearing the low electric hum of the fence makes you feel at ease as you gaze at the fauna" : "The hum is gone.  The fence is OFF!",
         image: () => state.fenceCut ? 11 : 10,
-        exits: { south: () => goScene("ranger4x4"), north: () => state.fenceCut ? goScene("trex") : (say("The fence blocks your path."), clearAction()), east: noExit, west: noExit },
+        exits: { south: () => goScene("ranger4x4"), north: () => state.fenceCut ? goScene("trex") : noExit(), east: noExit, west: noExit },
         hotspots: () => [
             { id: "warning", x: 33, y: 48, w: 26, h: 27, examine: () => "!DANGER! HIGH VOLTAGE series #25567ef" },
             { id: "fence", x: 0, y: 10, w: 86, h: 86, examine: () => "This is the electric fence that keeps the dinosaurs in",
                 operate: (item) => {
                     if (state.fenceCut)
-                        return "You cut through the fence!";
+                        return "You cut through then fence!";
                     if (!item)
                         return "you can't operate that?";
                     if (state.fencePowered && (item === "torch" || item === "nailfile")) {
@@ -483,11 +488,11 @@ const scenes = {
                         return "";
                     }
                     if (item === "torch" && !state.torchLit)
-                        return "The torch is not lit.";
+                        return "you can\'t operate that?";
                     if (item === "torch" && !state.fencePowered) {
                         state.fenceCut = true;
                         renderScene();
-                        return "You cut through the fence!";
+                        return "You cut through then fence!";
                     }
                     return "you can't operate that!";
                 } }
@@ -520,7 +525,7 @@ const scenes = {
         title: "The Zoo keeper",
         description: () => state.rangerGone ? (state.hatMoved ? (state.keyTaken ? "All that is left is his hat" : "Moving the hat aside you see a key") : "You see the T Rex running off in the distance with the ranger in his mouth!") : "Finally, some signs of life. He's dressed in Dinosaur Land uniform, maybe he knows how to leave the island.",
         image: () => !state.rangerGone ? 23 : (!state.hatMoved ? 24 : (!state.keyTaken ? 25 : 26)),
-        exits: { south: () => goScene("trex"), north: () => state.keyTaken ? goScene("dock") : (say("You should probably investigate here first."), clearAction()), east: noExit, west: noExit },
+        exits: { south: () => goScene("trex"), north: () => state.keyTaken ? goScene("dock") : (say("nothing happened"), clearAction()), east: noExit, west: noExit },
         hotspots: () => {
             if (!state.rangerGone)
                 return [
@@ -531,7 +536,7 @@ const scenes = {
                                 useItemSuccess("burger");
                                 renderScene();
                                 renderInventory();
-                                return "The ranger grabs the burger from your hand. You see the T Rex running off in the distance with the ranger in his mouth!";
+                                return "The ranger grabs the burger from your hand";
                             }
                             return "You can't operate that";
                         } }
@@ -548,12 +553,12 @@ const scenes = {
         }
     },
     dock: {
-        title: "The dock",
-        description: () => "At the end of the dock is a small boat — your way off the island.",
+        title: "",
+        description: () => "You made it out in the nick of time, congratulations",
         image: () => 19,
         exits: { south: () => goScene("zookeeper"), north: noExit, east: noExit, west: noExit },
         hotspots: () => [
-            { id: "boat", x: 19, y: 32, w: 67, h: 40, examine: () => "A boat. This could be your way off Dinosaur Island.", operate: (item) => {
+            { id: "boat", x: 19, y: 32, w: 67, h: 40, examine: () => "nothing interesting", operate: (item) => {
                     if (item === "key") {
                         say("The key fit perfectly");
                         setTimeout(win, 350);
@@ -639,13 +644,12 @@ function inventoryClick(id) {
         updateActionStatus();
         return;
     }
-    say("Select EXAMINE or OPERATE first.");
+    return;
 }
 function sceneClick(ev) {
     if (state.dead || state.won)
         return;
     if (!state.verb || state.verb === "go") {
-        say(state.verb === "go" ? "Choose a direction button." : "Choose an action first.");
         return;
     }
     const r = sceneImg.getBoundingClientRect();
@@ -670,7 +674,6 @@ function sceneClick(ev) {
 }
 function directionClick(dir) {
     if (state.verb !== "go") {
-        say("Click GO first, then choose a direction.");
         return;
     }
     const fn = scenes[state.scene].exits[dir];
@@ -761,8 +764,8 @@ function V4R(sceneNo,id,x1,y1,x2,y2,extra={}){
   const [w,h]=V4_DIMS[sceneNo];
   return Object.assign({id,x:x1/w*100,y:y1/h*100,w:(x2-x1)/w*100,h:(y2-y1)/h*100},extra);
 }
-function v4NoExit(){ say("You can't go that way."); clearAction(); }
-function v4FenceBlocked(){ say("The fence blocks your path."); clearAction(); }
+function v4NoExit(){ clearAction(); }
+function v4FenceBlocked(){ clearAction(); }
 
 // Original map recovered from NORTH/SOUTH/EAST/WEST handlers.
 scenes.entrance.exits={north:()=>goScene('fence'),south:v4NoExit,east:v4NoExit,west:v4NoExit};
@@ -779,7 +782,7 @@ scenes.restaurantInside.exits={north:v4NoExit,south:()=>goScene('restaurantOutsi
 scenes.kitchen.exits={north:v4NoExit,south:v4NoExit,east:v4NoExit,west:()=>goScene('restaurantInside')};
 scenes.visitorInside.exits={north:v4NoExit,south:()=>goScene('visitorOutside'),east:v4NoExit,west:()=>goScene('control')};
 scenes.control.exits={north:v4NoExit,south:v4NoExit,east:()=>goScene('visitorInside'),west:v4NoExit};
-scenes.car.exits={north:()=>goScene('ranger4x4','You climb back out of the Ranger vehicle.'),south:v4NoExit,east:v4NoExit,west:v4NoExit};
+scenes.car.exits={north:()=>goScene('ranger4x4'),south:v4NoExit,east:v4NoExit,west:v4NoExit};
 scenes.trex.exits={
   north:()=>state.rexGone?goScene('maintenance'):die('Seeing your sudden movement the T-Rex quickly crushes you in its jaws'),
   south:v4NoExit,
@@ -787,18 +790,19 @@ scenes.trex.exits={
   west:()=> (state.rexGone || state.rexDistracted) ? goScene('zookeeper') : die('The T-Rex, seeing you from behind the trees, crushes you in its jaws')
 };
 scenes.zookeeper.exits={north:()=>die('Not seeing the cliff ahead, you plunge 200 feet to your death'),south:v4NoExit,east:()=>goScene('trex'),west:v4NoExit};
-scenes.maintenance.exits={north:()=>state.maintenanceOpen?goScene('dock'):(say('The maintenance door is closed.'),clearAction()),south:()=>goScene('trex'),east:v4NoExit,west:v4NoExit};
+scenes.maintenance.exits={north:()=>state.maintenanceOpen?goScene('dock'):v4NoExit(),south:()=>goScene('trex'),east:v4NoExit,west:v4NoExit};
 scenes.dock.exits={north:v4NoExit,south:()=>goScene('maintenance'),east:v4NoExit,west:v4NoExit};
 
 // Vehicle: exact glovebox/tape rectangles recovered from the original.
-scenes.car.description=()=>"You are inside the Ranger 4x4.";
+scenes.car.title="Ranger";
+scenes.car.description=()=>"Noticing the door was open you walk in";
 scenes.car.hotspots=()=>[
   V4R(state.gloveboxOpen?1:2,'glovebox',256,137,326,166,{
     examine:()=>state.gloveboxOpen&&!state.nailfileTaken?'in the recesses of the glove box there is a nailfile':'this is a glovebox',
     operate:()=>{state.gloveboxOpen=true;renderScene();return 'you opened the glove box';},
     take:()=>state.gloveboxOpen&&!state.nailfileTaken?takeItem('nailfile','you found a nailfile',()=>state.nailfileTaken=true):"you can't take that!"
   }),
-  V4R(state.gloveboxOpen?1:2,'tape deck',188,142,246,149,{examine:()=>"This is the tape deck",operate:()=>"The tape deck plays:'The T-Rex is closing in on us, need the flo....' the voice goes dead"}),
+  V4R(state.gloveboxOpen?1:2,'tape deck',188,142,246,149,{examine:()=>"nothing interesting",operate:()=>"The tape deck plays:'The T-Rex is closing in on us, need the flo....' the voice goes dead"}),
   {id:'radio',x:67,y:25,w:20,h:18,examine:()=>"The radio is blinking 12:00"},
   {id:'instrument panel',x:4,y:23,w:35,h:33,examine:()=>"This is the instrament panel- There is no fuel"}
 ];
@@ -824,17 +828,17 @@ scenes.kitchen.hotspots=()=>[
 
 // Restaurant exterior: exact rare flower hitbox plus broad building/flower beds.
 scenes.restaurantOutside.hotspots=()=>[
-  V4R(state.flowerTaken?14:13,'restaurant',0,70,326,174,{examine:()=>"The World Famous Pre-Historic Restaurant, home of the T-Rex burger"}),
-  V4R(state.flowerTaken?14:13,'left flower bed',0,174,95,206,{examine:()=>"This is a flower Box full of flowers"}),
-  V4R(state.flowerTaken?14:13,'right flower bed',230,174,326,206,{examine:()=>"This is a flower Box full of flowers"}),
-  V4R(state.flowerTaken?14:13,'T-Rex Patunia',44,170,86,201,{examine:()=>"This is the lovely T-Rex Patunia",take:()=>state.flowerTaken?'you already have that!':takeItem('flower',' You took the rare T-Rex Patunia',()=>state.flowerTaken=true)})
+  V4R(state.flowerTaken?14:13,'restaurant',0,70,326,174,{examine:()=>"The World Famous Pre-Historic Restaurant, home of the T-Rex burger "}),
+  V4R(state.flowerTaken?14:13,'left flower bed',0,174,95,206,{examine:()=>"This is a flower Box full of flowers "}),
+  V4R(state.flowerTaken?14:13,'right flower bed',230,174,326,206,{examine:()=>"This is a flower box full of flowers "}),
+  V4R(state.flowerTaken?14:13,'T-Rex Patunia',44,170,86,201,{examine:()=>"The Creatous patunia ",take:()=>state.flowerTaken?'you already have that!':takeItem('flower',' You took the rare T-Rex Patunia',()=>state.flowerTaken=true)})
 ];
 
 // Park Center exterior: independently coded flags/windows.
 scenes.visitorOutside.hotspots=()=>[
   V4R(15,'left flag',60,31,86,68,{examine:()=>"The Dinosaur Island flag hangs proudly from the roof"}),
   V4R(15,'right flag',155,31,180,68,{examine:()=>"The Dinosaur Island flag hangs proudly from the roof"}),
-  V4R(15,'dinosaur sign',275,15,296,49,{examine:()=>"This is the Park Center sign"}),
+  V4R(15,'dinosaur',275,15,296,49,{examine:()=>"Dinasaur"}),
   V4R(15,'window 1',20,104,45,154,{examine:()=>"The glare from the window shines in your eyes"}),
   V4R(15,'window 2',184,104,210,154,{examine:()=>"The glare from the window shines in your eyes"}),
   V4R(15,'window 3',234,104,260,154,{examine:()=>"The glare from the window shines in your eyes"}),
@@ -844,22 +848,22 @@ scenes.visitorOutside.hotspots=()=>[
 // Inside Park Center / museum.
 scenes.visitorInside.hotspots=()=>[
   V4R(16,'T-Rex skull',255,86,292,112,{examine:()=>"Examining the skull of the great T-Rex you realize what an awesome killing machine it must have been"}),
-  V4R(16,'T-Rex skeleton',164,118,243,188,{examine:()=>"The T-rex measures 12 meters from head to tail"}),
+  V4R(16,'T-Rex skeleton',164,118,243,188,{examine:()=>"The T-rex measures 12 meters from head to tail "}),
   V4R(16,'information plaque',22,180,42,200,{examine:()=>"The Tyrannosaurus Rex is the largest of the meat eating dinosaurs. The dinosaur was named by Henry Fairfield Osborn, after partial skeletal remains were found in montana in 1905"})
 ];
 
 // Control room exact object rectangles. Password comparison is literally #25567ef.
 scenes.control.hotspots=()=>[
-  V4R(state.cabinetOpen?18:17,'clay flowerpot',12,80,57,109,{examine:()=>"This is a clay flower pot"}),
+  V4R(state.cabinetOpen?18:17,'clay flowerpot',12,80,57,109,{examine:()=>"This is a clay flower pot "}),
   V4R(state.cabinetOpen?18:17,'green plant',15,0,59,79,{examine:()=>"This Green plant typifies the local fauna"}),
   V4R(state.cabinetOpen?18:17,'computer',109,5,210,91,{examine:()=>"This computer is a 786!",operate:()=>{openLogin();return '';}}),
-  V4R(state.cabinetOpen?18:17,'burnt bulb',233,30,254,42,{examine:()=>"The bulb has burnt out"}),
+  V4R(state.cabinetOpen?18:17,'burnt bulb',233,30,254,42,{examine:()=>"The bulb has burnt out "}),
   V4R(state.cabinetOpen?18:17,'drawers',239,121,325,229,{examine:()=>"These Drawers are empty"}),
   V4R(state.cabinetOpen?18:17,'filing cabinet',0,120,87,179,{
     examine:()=>state.cabinetOpen&&!state.torchTaken?'there is a blow torch inside':'This filing cabinet',
     operate:(item)=>{
-      if(state.cabinetOpen)return state.torchTaken?'The filing cabinet is open.':'there is a blow torch inside';
-      if(item==='nailfile'){state.cabinetOpen=true;renderScene();return 'You pick the filing cabinet lock with the nail file';}
+      if(state.cabinetOpen)return state.torchTaken?'This filing cabinet ':'there is a blow torch inside';
+      if(item==='nailfile'){state.cabinetOpen=true;renderScene();return 'there is a blow torch inside';}
       return "You can't operate that";
     },
     take:()=>state.cabinetOpen&&!state.torchTaken?takeItem('torch','you found a blow torch',()=>{state.torchTaken=true;state.cabinetOpen=true;}):"you can't take that"
@@ -867,17 +871,17 @@ scenes.control.hotspots=()=>[
 ];
 scenes.control.image=()=>state.cabinetOpen?18:17;
 
-// Fence: power and physical cut are separate original flags.
+// Fence: hotspot text corrected to match the original game behavior.
 scenes.fence.hotspots=()=>[
-  V4R(state.fenceCut?11:10,'warning sign',123,158,146,188,{examine:()=>"!DANGER! HIGH VOLTAGE series #25567ef"}),
-  V4R(state.fenceCut?11:10,'electric fence',121,87,279,239,{
+  V4R(state.fenceCut?11:10,'warning sign',120,146,167,197,{examine:()=>"!DANGER! HIGH VOLTAGE series #25567ef"}),
+  V4R(state.fenceCut?11:10,'electric fence',5,85,206,239,{
     examine:()=>state.fencePowered?'This is the electric fence that keeps the dinosaurs in':'The hum is gone.  The fence is OFF!',
     operate:(item)=>{
-      if(state.fenceCut)return 'You cut through the fence!';
+      if(state.fenceCut)return 'You cut through then fence!';
       if(item!=='torch')return "you can't operate that!";
-      if(!state.torchLit)return 'The torch is not lit.';
+      if(!state.torchLit)return 'you can\'t operate that?';
       if(state.fencePowered){die('You feel almost nothing as 10,000 volts rush through your body');return '';}
-      state.fenceCut=true;renderScene();return 'You cut through the fence!';
+      state.fenceCut=true;renderScene();return 'You cut through then fence!';
     }
   })
 ];
@@ -892,7 +896,7 @@ scenes.trex.hotspots=()=>[
       if(state.rexGone)return 'The T-Rex is gone!';
       if(item==='flower'){
         state.rexDistracted=true;
-        return 'The T-Rex is distracted by the T-Rex Patunia.';
+        return '';
       }
       die('Seeing your sudden movement the T-Rex quickly crushes you in its jaws');return '';
     }
@@ -909,7 +913,7 @@ scenes.zookeeper.hotspots=()=>{
         if(item==='burger'){
           state.rangerGone=true;state.rexGone=true;state.rexDistracted=false;state.inventory.burger=false;
           renderScene();renderInventory();
-          return 'The ranger grabs the burger from your hand. You see the T Rex running off in the distance with the ranger in his mouth!';
+          return 'The ranger grabs the burger from your hand';
         }
         return "You can't operate that";
       }
@@ -924,9 +928,9 @@ scenes.zookeeper.hotspots=()=>{
 // Maintenance: key, not nail file.
 scenes.maintenance.hotspots=()=>[
   V4R(state.maintenanceOpen?7:6,'maintenance lock / door',196,126,212,146,{
-    examine:()=>state.maintenanceOpen?'The maintenance door stands open.':'Maintenance door',
+    examine:()=>"Maintenance door",
     operate:(item)=>{
-      if(state.maintenanceOpen)return 'The door is already open.';
+      if(state.maintenanceOpen)return 'nothing happened';
       if(item==='key'){state.maintenanceOpen=true;renderScene();return 'The key fit perfectly';}
       return "You can't operate that";
     }
@@ -936,7 +940,7 @@ scenes.maintenance.hotspots=()=>[
 // The key is consumed by the maintenance puzzle in the recovered logic, so the
 // boat itself no longer incorrectly requires the key as V3 did.
 scenes.dock.hotspots=()=>[
-  {id:'boat',x:19,y:32,w:67,h:40,examine:()=>"A boat. This could be your way off Dinosaur Island.",operate:()=>{say('You made it out in the nick of time, congratulations');setTimeout(win,300);return 'You made it out in the nick of time, congratulations';}}
+  {id:'boat',x:19,y:32,w:67,h:40,examine:()=>"nothing interesting",operate:()=>{say('You made it out in the nick of time, congratulations');setTimeout(win,300);return 'You made it out in the nick of time, congratulations';}}
 ];
 
 // Replace CSS-drawn inventory art with the original embedded icon resources.
