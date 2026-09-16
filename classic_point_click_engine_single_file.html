@@ -1,0 +1,1876 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
+  <title>Classic Point & Click Adventure Engine</title>
+  <style>
+/*
+===============================================================================
+CLASSIC POINT & CLICK ADVENTURE ENGINE — USER INTERFACE
+===============================================================================
+
+This stylesheet is a cleaned-up version of the final V50 interface.
+The gameplay layout, spacing, button arrangement, message window, action-status
+window, scene viewport, and six inventory slots intentionally retain the same
+visual structure.
+
+You normally do NOT need to edit this file to make a game. Start in js/game.js.
+===============================================================================
+*/
+
+:root {
+  --panel: #bdbdbd;
+  --hi: #fff;
+  --shadow: #555;
+  --text: #111;
+}
+
+* { box-sizing: border-box; }
+
+html,
+body {
+  margin: 0;
+  min-height: 100%;
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
+  background: #171717;
+  color: var(--text);
+  font-family: "Courier New", monospace;
+}
+
+body {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  padding-top: 18px;
+  padding-bottom: 18px;
+  padding-left: max(5px, env(safe-area-inset-left));
+  padding-right: max(5px, env(safe-area-inset-right));
+  background: radial-gradient(circle at 50% 30%, #3d3d3d, #111 68%);
+}
+
+button {
+  min-height: 46px;
+  padding: 12px 15px;
+  cursor: pointer;
+  color: #111;
+  background: var(--panel);
+  border: 0;
+  border-top: 3px solid var(--hi);
+  border-left: 3px solid var(--hi);
+  border-right: 3px solid var(--shadow);
+  border-bottom: 3px solid var(--shadow);
+  font: 700 18px/1 "Courier New", monospace;
+}
+
+button:active,
+button.active {
+  background: #a9a9a9;
+  border-top-color: var(--shadow);
+  border-left-color: var(--shadow);
+  border-right-color: var(--hi);
+  border-bottom-color: var(--hi);
+}
+
+button:disabled {
+  cursor: default;
+  color: #777;
+  background: #aaa;
+  filter: saturate(.2);
+  opacity: .58;
+}
+
+.hidden { display: none !important; }
+
+#app {
+  width: 100%;
+  max-width: 1040px;
+  min-width: 0;
+  margin: 0 auto;
+}
+
+.panel {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  overflow: hidden;
+  padding: 10px;
+  background: var(--panel);
+  border-top: 4px solid #eee;
+  border-left: 4px solid #eee;
+  border-right: 4px solid #444;
+  border-bottom: 4px solid #444;
+  box-shadow: 0 16px 50px #000b;
+}
+
+/* ------------------------------------------------------------------------- */
+/* START SCREEN                                                              */
+/* ------------------------------------------------------------------------- */
+
+.start-panel {
+  padding: 22px;
+  text-align: center;
+}
+
+.title-art {
+  display: block;
+  width: min(600px, 88vw);
+  max-height: 58vh;
+  object-fit: contain;
+  image-rendering: pixelated;
+  margin: 0 auto 20px;
+  background: #000;
+  border: 3px inset #aaa;
+}
+
+.start-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: center;
+}
+
+.small-note {
+  margin-top: 16px;
+  color: #444;
+  font-size: 12px;
+}
+
+/* ------------------------------------------------------------------------- */
+/* MAIN GAME SCREEN                                                          */
+/* ------------------------------------------------------------------------- */
+
+.game-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 8px;
+  font-size: 18px;
+}
+
+.head-controls {
+  display: flex;
+  flex: none;
+  gap: 6px;
+}
+
+.head-controls button {
+  min-height: 30px;
+  padding: 7px 9px;
+  font-size: 12px;
+}
+
+/* The scene viewport. The black background shows through when an image is
+   letterboxed. The engine's click math accounts for that letterboxing. */
+.scene-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  min-height: 240px;
+  overflow: hidden;
+  background: #000;
+  border: 3px inset #aaa;
+}
+
+#scene-image {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  height: auto;
+  min-height: 240px;
+  max-height: min(53vh, 540px);
+  object-fit: contain;
+  image-rendering: pixelated;
+  cursor: crosshair;
+  user-select: none;
+}
+
+/* ?debug=1 draws hotspot rectangles into this overlay. */
+#debug-overlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.debug-hotspot {
+  position: absolute;
+  overflow: hidden;
+  color: #fff;
+  background: #f0f3;
+  border: 2px solid #f0f;
+  font-size: 10px;
+}
+
+/* The three-block row: action buttons, compass, and text window. */
+.controls-row {
+  display: grid;
+  grid-template-columns: 1.05fr .92fr 1.4fr;
+  gap: 10px;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  margin-top: 9px;
+}
+
+.block {
+  min-width: 0;
+  max-width: 100%;
+  padding: 8px;
+  background: #aaa;
+  border: 3px groove #eee;
+}
+
+/* GO / EXAMINE / TAKE / OPERATE — intentionally unchanged in arrangement. */
+.verbs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.verbs button,
+.directions button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
+}
+
+.verbs button {
+  min-height: 68px;
+  flex-direction: column;
+  gap: 8px;
+  padding: 5px 8px;
+  font-size: 13px;
+}
+
+.menu-icon {
+  display: block;
+  flex: none;
+  width: 32px;
+  height: 32px;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+}
+
+/* N / W / E / S — intentionally unchanged in position and icon treatment. */
+.directions {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  grid-template-rows: auto auto auto;
+  gap: 5px;
+  align-items: center;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.directions .north { grid-column: 2; }
+.directions .west  { grid-column: 1; grid-row: 2; }
+.directions .east  { grid-column: 3; grid-row: 2; }
+.directions .south { grid-column: 2; grid-row: 3; }
+
+.directions button {
+  width: 100%;
+  max-width: 78px;
+  min-height: 0;
+  aspect-ratio: 1 / 1;
+  justify-self: center;
+  gap: 0;
+  padding: 6px;
+  font-size: 0 !important;
+  line-height: 0 !important;
+}
+
+.direction-icon {
+  display: block;
+  width: min(48px, 70%);
+  height: auto;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+}
+
+/* Black message window. */
+.message-block {
+  min-height: 130px;
+  background: #080808;
+  border: 3px inset #ddd;
+}
+
+.message-block #message {
+  padding: 4px;
+  color: #fff;
+  font-size: 16px;
+  line-height: 1.35;
+  white-space: pre-wrap;
+}
+
+/* Thin "Choose an action" strip. */
+.action-status {
+  min-height: 29px;
+  margin: 8px 0 5px;
+  padding: 6px 10px;
+  background: #d2d2d2;
+  border: 2px inset #eee;
+  font-size: 12px;
+}
+
+/* Exactly six inventory windows are rendered by engine.js. */
+.inventory {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 6px;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+}
+
+.item-slot {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px;
+  min-width: 0;
+  max-width: 100%;
+  min-height: 70px;
+  overflow: hidden;
+  padding: 6px;
+  font-size: 11px;
+}
+
+.item-slot.selected { outline: 3px solid #111; }
+
+.item-icon {
+  display: block;
+  width: 32px;
+  height: 32px;
+  object-fit: contain;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+}
+
+.item-label { display: block; }
+
+.build-label {
+  margin-top: 4px;
+  color: #333;
+  font-size: 10px;
+  text-align: right;
+}
+
+/* ------------------------------------------------------------------------- */
+/* GAME OVER / WIN                                                           */
+/* ------------------------------------------------------------------------- */
+
+.end-screen { text-align: center; }
+
+.end-screen img {
+  display: block;
+  max-width: min(650px, 90vw);
+  max-height: 55vh;
+  margin: 0 auto 18px;
+  image-rendering: pixelated;
+  border: 3px inset #aaa;
+}
+
+.end-screen h1 { font-size: 22px; }
+.end-screen p { max-width: 700px; margin: 12px auto 18px; }
+
+.escape-time {
+  width: max-content;
+  max-width: 100%;
+  box-sizing: border-box;
+  margin: 12px auto;
+  padding: 10px 12px;
+  color: #fff;
+  background: #000;
+  border: 2px inset #aaa;
+  font-weight: bold;
+  font-size: clamp(15px, 3vw, 22px);
+  text-align: center;
+}
+
+/* ------------------------------------------------------------------------- */
+/* MODALS / GENERIC TEXT PROMPT                                              */
+/* ------------------------------------------------------------------------- */
+
+.modal {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 18px;
+  background: #000a;
+}
+
+.modal-box {
+  width: min(620px, 96vw);
+  padding: 20px;
+  background: #c0c0c0;
+  border-top: 4px solid #fff;
+  border-left: 4px solid #fff;
+  border-right: 4px solid #444;
+  border-bottom: 4px solid #444;
+  box-shadow: 0 18px 70px #000;
+}
+
+.text-modal { line-height: 1.45; }
+.text-modal h2 { margin-top: 0; }
+
+.terminal {
+  color: #0f0;
+  background: #050505;
+}
+
+.terminal pre {
+  margin: 0 0 12px;
+  white-space: pre-wrap;
+  font: 18px/1.35 "Courier New", monospace;
+}
+
+.terminal input {
+  width: 100%;
+  margin-bottom: 12px;
+  padding: 9px;
+  color: #0f0;
+  background: #000;
+  border: 2px solid #0f0;
+  font: 20px "Courier New", monospace;
+}
+
+.terminal button { margin-right: 8px; }
+
+/* ------------------------------------------------------------------------- */
+/* PHONE / NARROW SCREEN LAYOUT                                              */
+/* ------------------------------------------------------------------------- */
+
+@media (max-width: 760px) {
+  body {
+    align-items: flex-start;
+    padding-top: 5px;
+    padding-bottom: 5px;
+  }
+
+  #app { max-width: none; }
+  .panel { padding: 6px; }
+
+  #scene-image {
+    width: 100%;
+    height: auto;
+    min-height: 0;
+  }
+
+  .game-head { font-size: 14px; }
+
+  .controls-row {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 8px;
+  }
+
+  .controls-row > .block { width: 100%; }
+  .message-block { grid-column: 1 / -1; width: 100%; min-height: 100px; }
+  .message-block #message { font-size: 14px; }
+
+  .verbs { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+  .verbs button { padding: 4px 3px; font-size: clamp(11px, 3.3vw, 14px); }
+
+  .directions { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr); }
+  .directions button { max-width: 86px; padding: 8px; }
+  .directions .direction-icon { width: min(52px, 76%); }
+
+  .menu-icon,
+  .direction-icon {
+    width: 30px;
+    height: 30px;
+  }
+
+  .directions .direction-icon {
+    width: min(52px, 76%);
+    height: auto;
+  }
+
+  .inventory { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .item-slot { padding: 5px 2px; font-size: clamp(9px, 2.8vw, 11px); }
+}
+
+</style>
+</head>
+<body>
+
+<!--
+===============================================================================
+BEGINNER NOTE
+===============================================================================
+You should almost never need to edit the HTML below.
+
+The visible gameplay layout is intentionally the same layout used by the final
+Escape From Dinosaur Island browser build:
+
+  * scene viewing window
+  * GO / EXAMINE / TAKE / OPERATE buttons
+  * N / W / E / S direction pad
+  * black message window
+  * "Choose an action" status strip
+  * exactly six inventory windows
+
+To make your own game, start in js/game.js instead.
+===============================================================================
+-->
+
+<main id="app">
+  <section id="start-screen" class="panel start-panel">
+    <img id="title-art" class="title-art" alt="Game title art">
+    <div class="start-buttons">
+      <button id="start-btn">START GAME</button>
+      <button id="instructions-btn">INSTRUCTIONS</button>
+      <button id="story-btn">STORY</button>
+      <button id="about-btn">ABOUT</button>
+    </div>
+    <div id="start-note-1" class="small-note"></div>
+    <div id="start-note-2" class="small-note"></div>
+  </section>
+
+  <section id="game-screen" class="panel hidden">
+    <header class="game-head">
+      <strong id="scene-title"></strong>
+      <div class="head-controls">
+        <button id="music-toggle">MUSIC: ON</button>
+        <button id="quit-btn">EXIT</button>
+      </div>
+    </header>
+
+    <div id="scene-wrap" class="scene-wrap">
+      <img id="scene-image" draggable="false" alt="Game scene">
+      <div id="debug-overlay"></div>
+    </div>
+
+    <div class="controls-row">
+      <div class="verbs block">
+        <button class="verb" data-verb="go">
+          <img class="menu-icon" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAtUlEQVR4nO2X3Q6AIAiFqfng59F4s7qpzTlDYBjr52xdlfB1UNSFmTdKVCEiYuaU5ABoTclcSQUAgADkANSJPRAj+Kkl0MCLAL1BWhe0Y6c4YCnVJYAUJHJChjswgmvfdwE0fxjlQqgDHqhndEKNvCV5jwNapa6CqZ0wfA5Ed0LXZhSl27Zjz+5ZrAE9EJK+1wdamUtwZbH39JTuwA9gOhVbuqN2OYqT0BLI+u2p9BLQcT1Pe3b6gmtlqQGIXQAAAABJRU5ErkJggg==" alt=""><span>GO</span>
+        </button>
+        <button class="verb" data-verb="examine">
+          <img class="menu-icon" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAA4ElEQVR4nO2XSw7DMAhEadV74ZuV3gyfrF00rqiDfwkOG4+URaQATxAPyY2Z3+CoBwAAM7sUJ6IvwEiA5XMA0AaQyXo7FULohikCpMAj45ExCaYEogIQkdl7kfKEEFSIe6s4IgIimoA0AbTiltIgfgC1tscYp0FUT4Fl4ZJ274CU1fwPA0gQF4ArRtB0wtkQf6dAWugs5Ya084GZEJobqk44A6JkxcVdkCDO7oRDy0gGyG5cuo61BL2jMf0gqSV+bvevgYK5upxwphbAAlgAQz6Q68z5T3LvgDsAbL/nbtcHCf6LsF8oLqoAAAAASUVORK5CYII=" alt=""><span>EXAMINE</span>
+        </button>
+        <button class="verb" data-verb="take">
+          <img class="menu-icon" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAABX0lEQVR4nMVXUa7EIAgcmh7Mmy17M27G+5E+Y7FKS7OTNNZUYYQBUxIRxY9QSsEOACICZgYAMIAPgK8zct1oazOwmUGdOP/U7/oGAXWcUXXojZkkNuAcZgKgqsOHUlw3BFrn5uQKs+9hAhaBCFQ1JQ078K9uBUBEyydUVRDRIyJHFTBwK7dPI7HZCzPfNvSExDZf8i6JEwFmBlE8GaadKIk97GkAE6SNwFqzSktBS8LebxOYpYGIjueKyAqJcAr6uu/7RhuFdj4iEkqBZ8iL1nFn1ChdRSJFAx6JZk5XJIYE7pZji5oaNVseibQq6An3WhgdKK0PjNCKMJQCQyQNsyh4mBJYMTIisdKUUjuhh741h0TYn2altTIzROR0L4iIS2IqwsjtZs7NYeu8lOLaIhFR2/QEM6JeBwWSy3B0kFLKcE9aK76KYvvrZ+tt/noV9AiLcMXgioZGQrRfvZ/hD1RoB+JrUOcQAAAAAElFTkSuQmCC" alt=""><span>TAKE</span>
+        </button>
+        <button class="verb" data-verb="operate">
+          <img class="menu-icon" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAABB0lEQVR4nMXWYQ6DIAwF4NfFg3m0dzRv1v2YOmDAWtZmJCTq1PdZhiLHcSj+1PZ9x3ZuiKp2ISJS7ZMMRWwAMAo/f0sFbd4LSlCLWQaIyMeT9lrGcJgrICLh4w8AD+uJqpoHIGkazwyEuQIXMBpxA0ZVKIMzEMMKjIKjERWgrMIsOGL+dwFeRHgFvIg0gAURVYHpm7BEtNuj8y3HzID2BtYn9lTG/CKyNpJ3/wvAiwgFtIEWREoFeogRxL0ium66crwHcVeAJBTo9m/l/hlwhY+aFbEEqMJVX30RsQR4J5zBQV/E9FkQDwhcC7gAJHFHTxCCxP9AhQgIdwNKRK+vrA8EmE7t7CZP9d23IkPt6ToAAAAASUVORK5CYII=" alt=""><span>OPERATE</span>
+        </button>
+      </div>
+
+      <div class="directions block">
+        <button class="dir north" data-dir="north" aria-label="North" title="North">
+          <img class="direction-icon" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAsElEQVR4nO2W6wqAMAiFNXrwvbn9GKsYOW8LCyZIwZx+LjoOAYAg0bbM4gtgAXwCYLdvKcF1N0DpntG4agiiENkSevYR7+V8J7qci3+OKYP8tXmx+L2AkIyJ4SHMfwG9MDnUxK076TNYcrp0AHHeSbiFqEFEQUJKiBg/jSlSHIGYNgsiEP/QgdbdqEtNzOM+3kUZVfg4R/owUgBYQbRxZoC+gHc9DDDX0u+EC2ABpAMc0c3ka6eEAj0AAAAASUVORK5CYII=" alt="NORTH">
+        </button>
+        <button class="dir west" data-dir="west" aria-label="West" title="West">
+          <img class="direction-icon" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAArklEQVR4nO2V3QrAIAiFT2MP7pu7iyBG4E/acBcJsbGO+eXMGgBGoV2VwQ/AAfgFwL3uQsn5MABNz6yuW4PZiNYWjPixPGi8M2s6KDqyfOzgOQAdovwUAI7dI50BOQvlGUgB8IaL3A3Qmh2Ques+AZCCZbNQXgOAsw/gVeFzpUvftbUQOQVayiP/f/jKw98PIrsHwOWXkQNgFcSrWwaYA0Tn0wB7rbwPHIADUA7wAP5g2nPOprwIAAAAAElFTkSuQmCC" alt="WEST">
+        </button>
+        <button class="dir east" data-dir="east" aria-label="East" title="East">
+          <img class="direction-icon" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAo0lEQVR4nO2V3QqAMAiFj9GD783tYhAxclO3YYHCoWD+fFg6AsAItCOyeAIkwCcATntImTx3A5TmOetXjTBcRLaEzACRLY5llfudWS8ph6Bx8SfEIJngI0Msn4LafpupiTUdkPWe8397gDsz42m/GcBTpGfhnyAcAFi8B7S5sGsKej+pGCNr/yoOv4wUAFYQrZ8ZoC3gPZ8GWGvheyABEiAc4AKSc/BhPNQpigAAAABJRU5ErkJggg==" alt="EAST">
+        </button>
+        <button class="dir south" data-dir="south" aria-label="South" title="South">
+          <img class="direction-icon" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAt0lEQVR4nO2V3Q6AIAiFD60H983pwgudpR6kRheysbbk54MhCgBFoByRyTfABvgFwGl3Sc7zZYDUfL12WQTTRWQLuOKnfU23f6pjZWI0yiXvJ3gGZCGoGVAFRBjLYmfxoarvVcDrcxeoPSCSK/pC6GvIQrBtNwOwwWtIxn5hE46lTsoMYvhbAEym1nMDiq9jD7TDN2updQYwruL7VRz+GBEAVhDWzgzQJlg9dwO8K+F7YANsgHCAC7nE8nXQ7CN/AAAAAElFTkSuQmCC" alt="SOUTH">
+        </button>
+      </div>
+
+      <div class="message-block block">
+        <div id="message"></div>
+      </div>
+    </div>
+
+    <div id="action-status" class="action-status"></div>
+    <div id="inventory" class="inventory"></div>
+    <div id="build-label" class="build-label"></div>
+  </section>
+
+  <section id="game-over-screen" class="panel end-screen hidden">
+    <img id="game-over-image" alt="Game Over">
+    <p id="death-message"></p>
+    <button id="restart-btn">TRY AGAIN</button>
+  </section>
+
+  <section id="win-screen" class="panel end-screen hidden">
+    <img id="win-image" alt="Victory">
+    <h1 id="win-heading">You won!</h1>
+    <p id="escape-time" class="escape-time"></p>
+    <p id="win-subtitle">PRESS PLAY AGAIN TO START OVER</p>
+    <button id="restart-win-btn">PLAY AGAIN</button>
+  </section>
+</main>
+
+<!-- Standard informational modals. Their text comes from js/game.js. -->
+<div id="help-modal" class="modal hidden"><div class="modal-box text-modal">
+  <h2>INSTRUCTIONS</h2>
+  <div id="instructions-content"></div>
+  <button id="help-close">CLOSE</button>
+</div></div>
+
+<div id="story-modal" class="modal hidden"><div class="modal-box text-modal">
+  <h2>STORY</h2>
+  <div id="story-content"></div>
+  <button id="story-close">CLOSE</button>
+</div></div>
+
+<div id="about-modal" class="modal hidden"><div class="modal-box text-modal">
+  <h2>ABOUT</h2>
+  <div id="about-content"></div>
+  <button id="about-close">CLOSE</button>
+</div></div>
+
+<!--
+Generic text-entry modal.
+Use Engine.openTextPrompt(...) for passwords, terminals, riddles, keypads, etc.
+It replaces the Dinosaur Island-specific security-login code with a reusable API.
+-->
+<div id="text-prompt-modal" class="modal hidden"><div class="modal-box terminal">
+  <pre id="text-prompt-body"></pre>
+  <input id="text-prompt-input" autocomplete="off" spellcheck="false" aria-label="Text input">
+  <div>
+    <button id="text-prompt-submit">ENTER</button>
+    <button id="text-prompt-cancel">CANCEL</button>
+  </div>
+</div></div>
+
+<audio id="music" loop preload="auto"></audio>
+<audio id="victory-sound" preload="auto"></audio>
+
+<!-- Load order matters: game.js defines your content; engine.js runs it. -->
+<script>
+"use strict";
+
+/*
+===============================================================================
+GAME.JS — THIS IS THE FILE A BEGINNER SHOULD EDIT FIRST
+===============================================================================
+
+The engine itself lives in engine.js.
+This file is deliberately separate so your GAME CONTENT does not get tangled
+up with the ENGINE CODE.
+
+Think of it like this:
+
+    engine.js = the rules of a board game
+    game.js   = the board, rooms, objects, dialogue, puzzles, and story
+
+The starter below contains only one neutral blank scene so the engine can be
+opened immediately in a browser. It is not a real game and contains no content
+from Escape From Dinosaur Island.
+
+Read README.md before changing anything. The comments in this file are the
+short version.
+===============================================================================
+*/
+
+window.GAME = {
+  /* ----------------------------------------------------------------------- */
+  /* BASIC INFORMATION                                                       */
+  /* ----------------------------------------------------------------------- */
+
+  title: "Untitled Point & Click Adventure",
+
+  // Small text in the lower-right corner while the game is running.
+  buildLabel: "RAW ENGINE TEMPLATE",
+
+  // The first scene shown after START GAME is pressed.
+  startScene: "start",
+
+  // These two lines appear under the title-screen buttons.
+  startNotes: [
+    "Classic point-and-click adventure engine.",
+    "Edit js/game.js to build your own game."
+  ],
+
+  /* ----------------------------------------------------------------------- */
+  /* TITLE / END SCREEN IMAGES                                                */
+  /* ----------------------------------------------------------------------- */
+
+  // Leave these as empty strings and the engine will generate neutral
+  // placeholders. Or replace them with paths such as:
+  //   "assets/title.png"
+  //   "assets/game-over.png"
+  //   "assets/win.png"
+  titleImage: "",
+  gameOverImage: "",
+  winImage: "",
+
+  /* ----------------------------------------------------------------------- */
+  /* AUDIO                                                                    */
+  /* ----------------------------------------------------------------------- */
+
+  // Paths can point to OGG, MP3, WAV, etc. Leave blank for silence.
+  music: "",
+  victorySound: "",
+  musicVolume: 0.30,
+
+  /* ----------------------------------------------------------------------- */
+  /* START-SCREEN TEXT                                                        */
+  /* ----------------------------------------------------------------------- */
+
+  storyHtml: `
+    <p>This is a blank engine template.</p>
+    <p>Replace this text with your game's story in <b>js/game.js</b>.</p>
+  `,
+
+  aboutHtml: `
+    <p>Classic Point & Click Adventure Engine.</p>
+    <p>The engine and game data are intentionally separated for readability.</p>
+  `,
+
+  // You may replace this with your own instructions, but these defaults match
+  // the four-button interface used by the engine.
+  instructionsHtml: `
+    <p>To move between scenes, first click <b>GO</b>, then click a direction.</p>
+    <p>To use an action—<b>TAKE</b>, <b>OPERATE</b>, <b>GO</b>, or <b>EXAMINE</b>—click the appropriate button first.</p>
+    <p>Then click the object you want to use it on. You must choose the action again each time you perform one.</p>
+    <p>For example, you cannot click <b>EXAMINE</b> once and then inspect several objects; click <b>EXAMINE</b> before each object.</p>
+  `,
+
+  /* ----------------------------------------------------------------------- */
+  /* INVENTORY                                                                */
+  /* ----------------------------------------------------------------------- */
+
+  // The interface always has SIX inventory windows, exactly like V50.
+  // Add up to six item definitions here. Empty positions stay blank.
+  //
+  // Example item (remove the // marks if you want to experiment):
+  //
+  // key: {
+  //   name: "Key",
+  //   icon: "assets/items/key.png",
+  //   examine: "A small brass key."
+  // }
+  //
+  // An item's ID (such as "key") is how the code refers to it internally.
+  items: {
+  },
+
+  /* ----------------------------------------------------------------------- */
+  /* OPTIONAL ITEM-ON-ITEM COMBINATIONS                                      */
+  /* ----------------------------------------------------------------------- */
+
+  // This is where you define things such as MATCHES + TORCH.
+  // Order does not matter: ["a", "b"] also matches using b on a.
+  //
+  // itemCombinations: [
+  //   {
+  //     items: ["matches", "torch"],
+  //     action({ engine, state }) {
+  //       state.flags.torchLit = true;
+  //       return "You light the torch.";
+  //     }
+  //   }
+  // ],
+  itemCombinations: [],
+
+  /* ----------------------------------------------------------------------- */
+  /* EXTRA GAME STATE                                                         */
+  /* ----------------------------------------------------------------------- */
+
+  // The engine automatically tracks:
+  //   state.scene
+  //   state.verb
+  //   state.selectedItem
+  //   state.inventory
+  //   state.dead
+  //   state.won
+  //
+  // Put your own puzzle flags under state.flags. Keeping custom flags together
+  // makes a game much easier to understand later.
+  createState() {
+    return {
+      flags: {
+        // Example:
+        // doorOpen: false,
+        // powerOn: true,
+      }
+    };
+  },
+
+  /* ----------------------------------------------------------------------- */
+  /* SCENES                                                                   */
+  /* ----------------------------------------------------------------------- */
+
+  // Every scene is one entry in this object.
+  //
+  // A scene can contain:
+  //   title       - text shown above the scene
+  //   image       - image path OR a function returning an image path
+  //   description - text shown when entering the scene
+  //   exits       - north/east/south/west destinations
+  //   hotspots    - clickable rectangles inside the scene picture
+  //
+  // For a normal exit, simply put the destination scene ID as a string:
+  //     north: "hallway"
+  //
+  // For a conditional exit, use a function and call engine.goTo(), engine.die(),
+  // etc. See README.md for several complete examples.
+  scenes: {
+    start: {
+      title: "Starter Scene",
+
+      // An empty image tells the engine to draw a neutral placeholder.
+      // Replace with something like "assets/scenes/start.png".
+      image: "",
+
+      description: "This is the blank starter scene. Add your game in js/game.js.",
+
+      exits: {
+        // north: "anotherScene",
+        // east: "anotherScene",
+        // south: "anotherScene",
+        // west: "anotherScene",
+      },
+
+      // No hotspots yet. See the examples in README.md.
+      hotspots: []
+    }
+  },
+
+  /* ----------------------------------------------------------------------- */
+  /* END-SCREEN WORDING                                                       */
+  /* ----------------------------------------------------------------------- */
+
+  winHeading: "You won!",
+  winSubtitle: "PRESS PLAY AGAIN TO START OVER"
+};
+
+</script>
+<script>
+"use strict";
+
+/*
+===============================================================================
+CLASSIC POINT & CLICK ADVENTURE ENGINE
+===============================================================================
+
+PURPOSE
+-------
+This file is the reusable ENGINE. It contains no Dinosaur Island scenes,
+dialogue, puzzles, inventory items, or story data.
+
+The engine handles the mechanical jobs that almost every game using this UI
+needs:
+
+  1. Showing scenes and scene titles.
+  2. Converting clicks on a scaled/letterboxed image into hotspot coordinates.
+  3. GO / EXAMINE / TAKE / OPERATE action selection.
+  4. North / East / South / West movement.
+  5. Six inventory slots and item selection.
+  6. Item-on-item combinations.
+  7. Game state / puzzle flags.
+  8. Game over and victory screens.
+  9. A hidden run timer that appears on victory.
+ 10. Optional looping music and a victory sound.
+ 11. A reusable text-entry modal for passwords, terminals, riddles, etc.
+ 12. ?debug=1 hotspot visualization.
+
+BEGINNER RULE OF THUMB
+----------------------
+If you are making a game, edit js/game.js first.
+Only edit this file when you want to change how the ENGINE itself behaves.
+===============================================================================
+*/
+
+(function () {
+  /* ----------------------------------------------------------------------- */
+  /* 1. SMALL DOM HELPER                                                      */
+  /* ----------------------------------------------------------------------- */
+
+  // $("#thing") is simply shorter than document.querySelector("#thing").
+  function $(selector) {
+    return document.querySelector(selector);
+  }
+
+  /* ----------------------------------------------------------------------- */
+  /* 2. GET REFERENCES TO THE EXISTING UI                                    */
+  /* ----------------------------------------------------------------------- */
+
+  // Keeping all element lookups together makes the rest of the file easier to
+  // read. These IDs correspond directly to elements in index.html.
+  const ui = {
+    startScreen: $("#start-screen"),
+    gameScreen: $("#game-screen"),
+    gameOverScreen: $("#game-over-screen"),
+    winScreen: $("#win-screen"),
+
+    titleArt: $("#title-art"),
+    startNote1: $("#start-note-1"),
+    startNote2: $("#start-note-2"),
+
+    sceneTitle: $("#scene-title"),
+    sceneWrap: $("#scene-wrap"),
+    sceneImage: $("#scene-image"),
+    debugOverlay: $("#debug-overlay"),
+
+    message: $("#message"),
+    actionStatus: $("#action-status"),
+    inventory: $("#inventory"),
+    buildLabel: $("#build-label"),
+
+    musicButton: $("#music-toggle"),
+    music: $("#music"),
+    victorySound: $("#victory-sound"),
+
+    gameOverImage: $("#game-over-image"),
+    deathMessage: $("#death-message"),
+
+    winImage: $("#win-image"),
+    winHeading: $("#win-heading"),
+    winSubtitle: $("#win-subtitle"),
+    escapeTime: $("#escape-time"),
+
+    helpModal: $("#help-modal"),
+    storyModal: $("#story-modal"),
+    aboutModal: $("#about-modal"),
+    instructionsContent: $("#instructions-content"),
+    storyContent: $("#story-content"),
+    aboutContent: $("#about-content"),
+
+    promptModal: $("#text-prompt-modal"),
+    promptBody: $("#text-prompt-body"),
+    promptInput: $("#text-prompt-input"),
+    promptSubmit: $("#text-prompt-submit"),
+    promptCancel: $("#text-prompt-cancel")
+  };
+
+  /* ----------------------------------------------------------------------- */
+  /* 3. VALIDATE THE GAME FILE                                               */
+  /* ----------------------------------------------------------------------- */
+
+  const game = window.GAME;
+
+  if (!game || typeof game !== "object") {
+    throw new Error("GAME was not found. Make sure js/game.js loads before js/engine.js.");
+  }
+
+  if (!game.scenes || typeof game.scenes !== "object") {
+    throw new Error("GAME.scenes is missing. Define at least one scene in js/game.js.");
+  }
+
+  if (!game.startScene || !game.scenes[game.startScene]) {
+    throw new Error("GAME.startScene must name a scene that exists in GAME.scenes.");
+  }
+
+  const itemDefinitions = game.items || {};
+  const itemIds = Object.keys(itemDefinitions);
+
+  if (itemIds.length > 6) {
+    throw new Error("This interface has exactly six inventory windows. GAME.items can contain at most 6 items.");
+  }
+
+  /* ----------------------------------------------------------------------- */
+  /* 4. ENGINE RUNTIME STATE                                                 */
+  /* ----------------------------------------------------------------------- */
+
+  let state = createFreshState();
+  let currentHotspots = [];
+  let musicEnabled = true;
+  let activePrompt = null;
+
+  // Adding ?debug=1 to the page address turns hotspot boxes on.
+  // Example: index.html?debug=1
+  const debugMode = new URLSearchParams(window.location.search).get("debug") === "1";
+
+  // Hidden speedrun-style timer. It starts when START GAME / TRY AGAIN /
+  // PLAY AGAIN starts a new run and stops the moment engine.win() is called.
+  let runTimerStart = null;
+  let runTimerEnd = null;
+
+  /* ----------------------------------------------------------------------- */
+  /* 5. CREATE / RESET STATE                                                 */
+  /* ----------------------------------------------------------------------- */
+
+  function createFreshState() {
+    // Start every declared item as "not owned."
+    const inventory = {};
+    for (const id of itemIds) {
+      inventory[id] = false;
+    }
+
+    // Let game.js add its own custom fields (usually state.flags).
+    const customState = typeof game.createState === "function"
+      ? clonePlainData(game.createState())
+      : {};
+
+    // Engine-owned fields come last so a game cannot accidentally start in an
+    // impossible internal action state.
+    return {
+      ...customState,
+      scene: game.startScene,
+      verb: null,
+      selectedItem: null,
+      inventory: {
+        ...inventory,
+        ...(customState.inventory || {})
+      },
+      dead: false,
+      won: false
+    };
+  }
+
+  function clonePlainData(value) {
+    // structuredClone is built into modern browsers. The JSON fallback keeps
+    // this template usable in older browsers for ordinary numbers, strings,
+    // booleans, arrays, and plain objects.
+    if (typeof structuredClone === "function") {
+      return structuredClone(value);
+    }
+    return JSON.parse(JSON.stringify(value));
+  }
+
+  /* ----------------------------------------------------------------------- */
+  /* 6. CONTEXT OBJECT PASSED TO GAME HANDLERS                               */
+  /* ----------------------------------------------------------------------- */
+
+  function makeContext(extra = {}) {
+    return {
+      engine: Engine,
+      state,
+      sceneId: state.scene,
+      scene: game.scenes[state.scene],
+      selectedItem: state.selectedItem,
+      ...extra
+    };
+  }
+
+  /* ----------------------------------------------------------------------- */
+  /* 7. TEXT / ACTION-SELECTION HELPERS                                      */
+  /* ----------------------------------------------------------------------- */
+
+  function say(text) {
+    ui.message.textContent = text == null ? "" : String(text);
+  }
+
+  function setVerb(verb) {
+    state.verb = verb;
+    state.selectedItem = null;
+
+    document.querySelectorAll(".verb").forEach(function (button) {
+      button.classList.toggle("active", button.dataset.verb === verb);
+    });
+
+    updateActionStatus();
+    renderInventory();
+  }
+
+  function clearAction() {
+    setVerb(null);
+  }
+
+  function updateActionStatus() {
+    let text = "Choose an action.";
+
+    if (state.verb === "go") {
+      text = "GO — choose a direction.";
+    } else if (state.verb === "examine") {
+      text = "EXAMINE — click something in the scene or inventory.";
+    } else if (state.verb === "take") {
+      text = "TAKE — click something in the scene.";
+    } else if (state.verb === "operate") {
+      if (state.selectedItem) {
+        const item = itemDefinitions[state.selectedItem];
+        const name = item ? item.name : state.selectedItem;
+        text = `OPERATE THE ${String(name).toUpperCase()} ON?`;
+      } else {
+        text = "OPERATE — click an inventory item, then its target.";
+      }
+    }
+
+    ui.actionStatus.textContent = text;
+  }
+
+  /* ----------------------------------------------------------------------- */
+  /* 8. SCENE VALUES CAN BE STRINGS OR FUNCTIONS                             */
+  /* ----------------------------------------------------------------------- */
+
+  function resolveValue(value, extraContext = {}) {
+    if (typeof value === "function") {
+      return value(makeContext(extraContext));
+    }
+    return value;
+  }
+
+  function getCurrentScene() {
+    const scene = game.scenes[state.scene];
+    if (!scene) {
+      throw new Error(`Scene "${state.scene}" does not exist in GAME.scenes.`);
+    }
+    return scene;
+  }
+
+  /* ----------------------------------------------------------------------- */
+  /* 9. PLACEHOLDER ART                                                      */
+  /* ----------------------------------------------------------------------- */
+
+  // The raw engine ships without game artwork. If an image path is blank,
+  // generate a neutral SVG so the scene window still has a useful 4:3 image.
+  function placeholderImage(label, width = 640, height = 480) {
+    const safeLabel = escapeXml(label || "SCENE IMAGE GOES HERE");
+    const svg = `
+      <svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">
+        <rect width="100%" height="100%" fill="#111"/>
+        <rect x="18" y="18" width="${width - 36}" height="${height - 36}" fill="#222" stroke="#777" stroke-width="4"/>
+        <text x="50%" y="47%" fill="#ddd" font-family="monospace" font-size="28" text-anchor="middle">${safeLabel}</text>
+        <text x="50%" y="55%" fill="#888" font-family="monospace" font-size="18" text-anchor="middle">Replace the image path in js/game.js</text>
+      </svg>`;
+
+    return "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svg);
+  }
+
+  function escapeXml(text) {
+    return String(text)
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;")
+      .replaceAll("'", "&apos;");
+  }
+
+  /* ----------------------------------------------------------------------- */
+  /* 10. RENDER THE CURRENT SCENE                                            */
+  /* ----------------------------------------------------------------------- */
+
+  function renderScene() {
+    const scene = getCurrentScene();
+    const title = resolveValue(scene.title) || state.scene;
+    const image = resolveValue(scene.image);
+    const hotspots = resolveValue(scene.hotspots) || [];
+
+    ui.sceneTitle.textContent = title;
+    ui.sceneImage.alt = title;
+    ui.sceneImage.src = image || placeholderImage(title);
+
+    if (!Array.isArray(hotspots)) {
+      throw new Error(`Scene "${state.scene}" hotspots must be an array or a function returning an array.`);
+    }
+
+    currentHotspots = hotspots;
+
+    if (debugMode) {
+      // renderDebug() also runs again after the image finishes loading.
+      renderDebug();
+    }
+  }
+
+  /* ----------------------------------------------------------------------- */
+  /* 11. THE IMPORTANT HOTSPOT-SCALING FIX                                   */
+  /* ----------------------------------------------------------------------- */
+
+  // WHY THIS EXISTS:
+  // CSS object-fit: contain can letterbox an image inside its <img> element.
+  // The element's rectangle and the ACTUAL PAINTED PICTURE are therefore not
+  // always the same rectangle. Using the element rectangle directly makes
+  // hotspots drift on some screen sizes.
+  //
+  // This function calculates the rectangle occupied by the visible picture.
+  function getVisibleSceneRect() {
+    const box = ui.sceneImage.getBoundingClientRect();
+    const imageWidth = ui.sceneImage.naturalWidth || box.width;
+    const imageHeight = ui.sceneImage.naturalHeight || box.height;
+
+    if (!imageWidth || !imageHeight || !box.width || !box.height) {
+      return box;
+    }
+
+    const scale = Math.min(box.width / imageWidth, box.height / imageHeight);
+    const width = imageWidth * scale;
+    const height = imageHeight * scale;
+
+    return {
+      left: box.left + (box.width - width) / 2,
+      top: box.top + (box.height - height) / 2,
+      right: box.left + (box.width + width) / 2,
+      bottom: box.top + (box.height + height) / 2,
+      width,
+      height
+    };
+  }
+
+  /* ----------------------------------------------------------------------- */
+  /* 12. DRAW HOTSPOTS IN DEBUG MODE                                         */
+  /* ----------------------------------------------------------------------- */
+
+  function renderDebug() {
+    ui.debugOverlay.innerHTML = "";
+
+    if (!debugMode) {
+      return;
+    }
+
+    const imageRect = getVisibleSceneRect();
+    const wrapRect = ui.sceneWrap.getBoundingClientRect();
+
+    for (const hotspot of currentHotspots) {
+      const box = document.createElement("div");
+      box.className = "debug-hotspot";
+      box.textContent = hotspot.id || "hotspot";
+
+      box.style.left = `${(imageRect.left - wrapRect.left) + (hotspot.x / 100) * imageRect.width}px`;
+      box.style.top = `${(imageRect.top - wrapRect.top) + (hotspot.y / 100) * imageRect.height}px`;
+      box.style.width = `${(hotspot.w / 100) * imageRect.width}px`;
+      box.style.height = `${(hotspot.h / 100) * imageRect.height}px`;
+
+      ui.debugOverlay.appendChild(box);
+    }
+  }
+
+  /* ----------------------------------------------------------------------- */
+  /* 13. SCENE CLICK -> HOTSPOT                                              */
+  /* ----------------------------------------------------------------------- */
+
+  function sceneClick(event) {
+    if (state.dead || state.won) {
+      return;
+    }
+
+    if (!state.verb || state.verb === "go") {
+      say(state.verb === "go" ? "Choose a direction button." : "Choose an action first.");
+      return;
+    }
+
+    const rect = getVisibleSceneRect();
+
+    // A click in the black letterbox area is not a click on the picture.
+    if (
+      event.clientX < rect.left ||
+      event.clientX > rect.right ||
+      event.clientY < rect.top ||
+      event.clientY > rect.bottom
+    ) {
+      clearAction();
+      return;
+    }
+
+    const xPercent = ((event.clientX - rect.left) / rect.width) * 100;
+    const yPercent = ((event.clientY - rect.top) / rect.height) * 100;
+
+    // Search backwards. If two hotspots overlap, the one defined later in the
+    // scene's array wins. This is useful for putting a small sign on a large
+    // wall hotspot, for example.
+    const hotspot = [...currentHotspots].reverse().find(function (candidate) {
+      return (
+        xPercent >= candidate.x &&
+        xPercent <= candidate.x + candidate.w &&
+        yPercent >= candidate.y &&
+        yPercent <= candidate.y + candidate.h
+      );
+    });
+
+    if (!hotspot) {
+      if (state.verb === "examine") say("Nothing unusual here.");
+      if (state.verb === "take") say("You can't take that.");
+      if (state.verb === "operate") say("You can't operate that.");
+      clearAction();
+      return;
+    }
+
+    let result = "";
+    const context = makeContext({ hotspot, itemId: state.selectedItem });
+
+    if (state.verb === "examine") {
+      result = hotspot.examine
+        ? resolveHandler(hotspot.examine, context)
+        : "Nothing unusual here.";
+    } else if (state.verb === "take") {
+      result = hotspot.take
+        ? resolveHandler(hotspot.take, context)
+        : "You can't take that.";
+    } else if (state.verb === "operate") {
+      result = hotspot.operate
+        ? resolveHandler(hotspot.operate, context)
+        : "You can't operate that.";
+    }
+
+    if (result) {
+      say(result);
+    }
+
+    if (!state.dead && !state.won) {
+      clearAction();
+    }
+  }
+
+  function resolveHandler(handler, context) {
+    return typeof handler === "function" ? handler(context) : handler;
+  }
+
+  /* ----------------------------------------------------------------------- */
+  /* 14. DIRECTION BUTTONS                                                   */
+  /* ----------------------------------------------------------------------- */
+
+  function directionClick(direction) {
+    if (state.verb !== "go") {
+      say("Click GO first, then choose a direction.");
+      return;
+    }
+
+    const scene = getCurrentScene();
+    const exit = scene.exits ? scene.exits[direction] : null;
+
+    if (!exit) {
+      say("You can't go that way.");
+      clearAction();
+      return;
+    }
+
+    if (typeof exit === "string") {
+      goTo(exit);
+      return;
+    }
+
+    if (typeof exit === "function") {
+      const result = exit(makeContext({ direction }));
+      if (result) say(result);
+      if (!state.dead && !state.won && state.verb === "go") clearAction();
+      return;
+    }
+
+    throw new Error(`Exit ${direction} in scene "${state.scene}" must be a scene ID string or a function.`);
+  }
+
+  /* ----------------------------------------------------------------------- */
+  /* 15. CHANGE SCENES                                                       */
+  /* ----------------------------------------------------------------------- */
+
+  function goTo(sceneId, message) {
+    if (!game.scenes[sceneId]) {
+      throw new Error(`Cannot go to "${sceneId}" because that scene does not exist.`);
+    }
+
+    state.scene = sceneId;
+    clearAction();
+    renderScene();
+
+    const scene = getCurrentScene();
+    const defaultDescription = resolveValue(scene.description) || "";
+    say(message !== undefined ? message : defaultDescription);
+  }
+
+  /* ----------------------------------------------------------------------- */
+  /* 16. SIX-SLOT INVENTORY                                                  */
+  /* ----------------------------------------------------------------------- */
+
+  function renderInventory() {
+    ui.inventory.innerHTML = "";
+
+    // Always draw exactly six windows, even if the game has fewer than six
+    // possible inventory items. This preserves the V50 UI layout.
+    for (let slotIndex = 0; slotIndex < 6; slotIndex += 1) {
+      const id = itemIds[slotIndex];
+      const owned = id ? Boolean(state.inventory[id]) : false;
+      const item = id ? itemDefinitions[id] : null;
+
+      const slot = document.createElement("button");
+      slot.className = "item-slot";
+      slot.disabled = !owned;
+
+      if (id) {
+        slot.dataset.item = id;
+      }
+
+      if (owned && item) {
+        slot.classList.add("owned");
+
+        if (state.selectedItem === id) {
+          slot.classList.add("selected");
+        }
+
+        if (item.icon) {
+          const icon = document.createElement("img");
+          icon.className = "item-icon";
+          icon.src = resolveValue(item.icon, { itemId: id });
+          icon.alt = "";
+          slot.appendChild(icon);
+        }
+
+        const label = document.createElement("span");
+        label.className = "item-label";
+        label.textContent = item.name || id;
+        slot.appendChild(label);
+
+        slot.addEventListener("click", function () {
+          inventoryClick(id);
+        });
+      } else {
+        // Intentionally EMPTY. No silhouette, blur, label, or hint.
+        slot.setAttribute("aria-label", "Empty inventory slot");
+      }
+
+      ui.inventory.appendChild(slot);
+    }
+  }
+
+  function inventoryClick(id) {
+    if (!state.inventory[id]) {
+      return;
+    }
+
+    const item = itemDefinitions[id];
+
+    if (state.verb === "examine") {
+      const result = item && item.examine
+        ? resolveHandler(item.examine, makeContext({ itemId: id }))
+        : `This is the ${item ? item.name : id}.`;
+
+      if (result) say(result);
+      clearAction();
+      return;
+    }
+
+    if (state.verb === "operate") {
+      // If one inventory item is already selected, this click is an attempt to
+      // use one inventory item on another inventory item.
+      if (state.selectedItem) {
+        const result = runItemCombination(state.selectedItem, id);
+        say(result || "Nothing happened.");
+        clearAction();
+        renderInventory();
+        return;
+      }
+
+      // Otherwise, this is the first half of "OPERATE ITEM ON ..."
+      state.selectedItem = id;
+      renderInventory();
+      updateActionStatus();
+      return;
+    }
+
+    say("Select EXAMINE or OPERATE first.");
+  }
+
+  function runItemCombination(firstId, secondId) {
+    const combinations = game.itemCombinations || [];
+
+    const match = combinations.find(function (combination) {
+      if (!Array.isArray(combination.items) || combination.items.length !== 2) {
+        return false;
+      }
+
+      const [a, b] = combination.items;
+      return (
+        (a === firstId && b === secondId) ||
+        (a === secondId && b === firstId)
+      );
+    });
+
+    if (!match) {
+      return "Nothing happened.";
+    }
+
+    return resolveHandler(match.action, makeContext({
+      firstItemId: firstId,
+      secondItemId: secondId
+    }));
+  }
+
+  function takeItem(id, message) {
+    if (!itemDefinitions[id]) {
+      throw new Error(`Cannot take unknown item "${id}". Add it to GAME.items first.`);
+    }
+
+    if (state.inventory[id]) {
+      return "You already have that!";
+    }
+
+    state.inventory[id] = true;
+    renderInventory();
+
+    return message || `You took the ${itemDefinitions[id].name || id}.`;
+  }
+
+  function removeItem(id) {
+    if (Object.prototype.hasOwnProperty.call(state.inventory, id)) {
+      state.inventory[id] = false;
+      if (state.selectedItem === id) state.selectedItem = null;
+      renderInventory();
+      updateActionStatus();
+    }
+  }
+
+  function hasItem(id) {
+    return Boolean(state.inventory[id]);
+  }
+
+  /* ----------------------------------------------------------------------- */
+  /* 17. GAME OVER / VICTORY                                                 */
+  /* ----------------------------------------------------------------------- */
+
+  function die(message) {
+    state.dead = true;
+    pauseMusic();
+
+    ui.gameScreen.classList.add("hidden");
+    ui.gameOverScreen.classList.remove("hidden");
+    ui.deathMessage.textContent = message || "Game over.";
+  }
+
+  function win(message) {
+    if (state.won) return;
+
+    state.won = true;
+    stopRunTimer();
+    pauseMusic();
+
+    ui.gameScreen.classList.add("hidden");
+    ui.winScreen.classList.remove("hidden");
+
+    if (message) {
+      ui.winHeading.textContent = message;
+    } else {
+      ui.winHeading.textContent = game.winHeading || "You won!";
+    }
+
+    ui.escapeTime.textContent = `ESCAPE TIME: ${formatRunTime()}`;
+
+    if (game.victorySound) {
+      ui.victorySound.currentTime = 0;
+      ui.victorySound.play().catch(function () {});
+    }
+  }
+
+  /* ----------------------------------------------------------------------- */
+  /* 18. HIDDEN RUN TIMER                                                    */
+  /* ----------------------------------------------------------------------- */
+
+  function startRunTimer() {
+    runTimerStart = performance.now();
+    runTimerEnd = null;
+    ui.escapeTime.textContent = "";
+  }
+
+  function stopRunTimer() {
+    if (runTimerStart !== null && runTimerEnd === null) {
+      runTimerEnd = performance.now();
+    }
+  }
+
+  function formatRunTime() {
+    const end = runTimerEnd ?? performance.now();
+    const elapsed = Math.max(0, Math.floor(end - (runTimerStart ?? end)));
+
+    const milliseconds = elapsed % 1000;
+    const totalSeconds = Math.floor(elapsed / 1000);
+    const seconds = totalSeconds % 60;
+    const totalMinutes = Math.floor(totalSeconds / 60);
+    const minutes = totalMinutes % 60;
+    const hours = Math.floor(totalMinutes / 60);
+
+    return `${String(hours).padStart(2, "0")} Hours ` +
+           `${String(minutes).padStart(2, "0")} Minutes ` +
+           `${String(seconds).padStart(2, "0")} Seconds ` +
+           `${String(milliseconds).padStart(3, "0")} Milliseconds`;
+  }
+
+  /* ----------------------------------------------------------------------- */
+  /* 19. GENERIC TEXT PROMPT                                                 */
+  /* ----------------------------------------------------------------------- */
+
+  // Use this for passwords, computer terminals, keypad codes, riddles, names,
+  // or any other place where the player must type text.
+  //
+  // Example from game.js:
+  //
+  // engine.openTextPrompt({
+  //   body: "SECURITY TERMINAL\\n\\nPassword:",
+  //   onSubmit(value) {
+  //     return value === "1234" ? "ACCESS GRANTED" : "ACCESS DENIED";
+  //   }
+  // });
+  function openTextPrompt(options = {}) {
+    activePrompt = options;
+    ui.promptBody.textContent = options.body || "Enter text:";
+    ui.promptInput.value = options.value || "";
+    ui.promptInput.placeholder = options.placeholder || "";
+    ui.promptModal.classList.remove("hidden");
+
+    // Delay focus one frame so mobile/desktop browsers see the now-visible box.
+    requestAnimationFrame(function () {
+      ui.promptInput.focus();
+      if (options.selectText) ui.promptInput.select();
+    });
+  }
+
+  function closeTextPrompt() {
+    ui.promptModal.classList.add("hidden");
+    activePrompt = null;
+  }
+
+  function submitTextPrompt() {
+    if (!activePrompt) return;
+
+    const options = activePrompt;
+    const value = ui.promptInput.value;
+
+    let result = "";
+    if (typeof options.onSubmit === "function") {
+      result = options.onSubmit(value, makeContext({ value }));
+    }
+
+    closeTextPrompt();
+    if (result) say(result);
+    clearAction();
+  }
+
+  function cancelTextPrompt() {
+    const options = activePrompt;
+    closeTextPrompt();
+
+    if (options && typeof options.onCancel === "function") {
+      const result = options.onCancel(makeContext());
+      if (result) say(result);
+    }
+
+    clearAction();
+  }
+
+  /* ----------------------------------------------------------------------- */
+  /* 20. AUDIO                                                               */
+  /* ----------------------------------------------------------------------- */
+
+  function configureAudio() {
+    if (game.music) ui.music.src = game.music;
+    if (game.victorySound) ui.victorySound.src = game.victorySound;
+
+    ui.music.volume = Number.isFinite(game.musicVolume) ? game.musicVolume : 0.30;
+    updateMusicButton();
+  }
+
+  function playMusic() {
+    if (!musicEnabled || !game.music) return;
+    ui.music.play().catch(function () {
+      // Browsers may block autoplay until the player interacts with the page.
+      // START GAME is a user click, so this usually succeeds.
+    });
+  }
+
+  function pauseMusic() {
+    ui.music.pause();
+  }
+
+  function toggleMusic() {
+    musicEnabled = !musicEnabled;
+    updateMusicButton();
+
+    if (musicEnabled && !state.dead && !state.won) {
+      playMusic();
+    } else {
+      pauseMusic();
+    }
+  }
+
+  function updateMusicButton() {
+    ui.musicButton.textContent = musicEnabled ? "MUSIC: ON" : "MUSIC: OFF";
+  }
+
+  /* ----------------------------------------------------------------------- */
+  /* 21. START / RESTART / EXIT                                              */
+  /* ----------------------------------------------------------------------- */
+
+  function newGame() {
+    state = createFreshState();
+    startRunTimer();
+
+    ui.startScreen.classList.add("hidden");
+    ui.gameOverScreen.classList.add("hidden");
+    ui.winScreen.classList.add("hidden");
+    ui.gameScreen.classList.remove("hidden");
+
+    renderScene();
+    renderInventory();
+    updateActionStatus();
+
+    const scene = getCurrentScene();
+    say(resolveValue(scene.description) || "");
+
+    ui.music.currentTime = 0;
+    playMusic();
+  }
+
+  function showStart() {
+    ui.gameScreen.classList.add("hidden");
+    ui.gameOverScreen.classList.add("hidden");
+    ui.winScreen.classList.add("hidden");
+    ui.startScreen.classList.remove("hidden");
+    pauseMusic();
+    clearAction();
+  }
+
+  /* ----------------------------------------------------------------------- */
+  /* 22. HOTSPOT COORDINATE HELPER                                           */
+  /* ----------------------------------------------------------------------- */
+
+  // If you measured a hotspot in IMAGE PIXELS, this helper converts it to the
+  // percentages the engine stores.
+  //
+  // Example for a 640x480 picture:
+  //   engine.rectFromPixels(640, 480, 100, 50, 220, 180, {
+  //     id: "door",
+  //     examine: "A wooden door."
+  //   })
+  //
+  // x1/y1 = upper-left corner in source-image pixels
+  // x2/y2 = lower-right corner in source-image pixels
+  function rectFromPixels(imageWidth, imageHeight, x1, y1, x2, y2, extra = {}) {
+    return {
+      ...extra,
+      x: (x1 / imageWidth) * 100,
+      y: (y1 / imageHeight) * 100,
+      w: ((x2 - x1) / imageWidth) * 100,
+      h: ((y2 - y1) / imageHeight) * 100
+    };
+  }
+
+  /* ----------------------------------------------------------------------- */
+  /* 23. PUBLIC ENGINE API                                                   */
+  /* ----------------------------------------------------------------------- */
+
+  // Game handlers receive this same object as context.engine.
+  const Engine = {
+    say,
+    goTo,
+    takeItem,
+    removeItem,
+    hasItem,
+    die,
+    win,
+    renderScene,
+    renderInventory,
+    clearAction,
+    openTextPrompt,
+    closeTextPrompt,
+    rectFromPixels,
+
+    // getState() intentionally returns the live state object. This keeps puzzle
+    // code beginner-friendly:
+    //
+    //   engine.getState().flags.doorOpen = true;
+    //
+    // For a larger commercial project you might choose stricter encapsulation.
+    getState() {
+      return state;
+    },
+
+    getGame() {
+      return game;
+    },
+
+    isDebugMode() {
+      return debugMode;
+    }
+  };
+
+  // Also expose it globally so you can experiment in the browser console.
+  window.Engine = Engine;
+
+  /* ----------------------------------------------------------------------- */
+  /* 24. PUT GAME METADATA INTO THE UI                                       */
+  /* ----------------------------------------------------------------------- */
+
+  function configureUiFromGame() {
+    document.title = game.title || "Point & Click Adventure";
+
+    ui.startNote1.textContent = (game.startNotes && game.startNotes[0]) || "";
+    ui.startNote2.textContent = (game.startNotes && game.startNotes[1]) || "";
+    ui.buildLabel.textContent = game.buildLabel || "";
+
+    ui.instructionsContent.innerHTML = game.instructionsHtml || "";
+    ui.storyContent.innerHTML = game.storyHtml || "";
+    ui.aboutContent.innerHTML = game.aboutHtml || "";
+
+    ui.winHeading.textContent = game.winHeading || "You won!";
+    ui.winSubtitle.textContent = game.winSubtitle || "PRESS PLAY AGAIN TO START OVER";
+
+    ui.titleArt.src = game.titleImage || placeholderImage(game.title || "YOUR GAME TITLE", 800, 450);
+    ui.gameOverImage.src = game.gameOverImage || placeholderImage("GAME OVER", 640, 360);
+    ui.winImage.src = game.winImage || placeholderImage("VICTORY", 640, 360);
+  }
+
+  /* ----------------------------------------------------------------------- */
+  /* 25. EVENT LISTENERS                                                     */
+  /* ----------------------------------------------------------------------- */
+
+  ui.sceneImage.addEventListener("click", sceneClick);
+  ui.sceneImage.addEventListener("load", function () {
+    if (debugMode) renderDebug();
+  });
+
+  window.addEventListener("resize", function () {
+    if (debugMode) renderDebug();
+  });
+
+  document.querySelectorAll(".verb").forEach(function (button) {
+    button.addEventListener("click", function () {
+      setVerb(button.dataset.verb);
+    });
+  });
+
+  document.querySelectorAll(".dir").forEach(function (button) {
+    button.addEventListener("click", function () {
+      directionClick(button.dataset.dir);
+    });
+  });
+
+  $("#start-btn").addEventListener("click", newGame);
+  $("#restart-btn").addEventListener("click", newGame);
+  $("#restart-win-btn").addEventListener("click", newGame);
+  $("#quit-btn").addEventListener("click", showStart);
+  ui.musicButton.addEventListener("click", toggleMusic);
+
+  $("#instructions-btn").addEventListener("click", function () {
+    ui.helpModal.classList.remove("hidden");
+  });
+  $("#story-btn").addEventListener("click", function () {
+    ui.storyModal.classList.remove("hidden");
+  });
+  $("#about-btn").addEventListener("click", function () {
+    ui.aboutModal.classList.remove("hidden");
+  });
+  $("#help-close").addEventListener("click", function () {
+    ui.helpModal.classList.add("hidden");
+  });
+  $("#story-close").addEventListener("click", function () {
+    ui.storyModal.classList.add("hidden");
+  });
+  $("#about-close").addEventListener("click", function () {
+    ui.aboutModal.classList.add("hidden");
+  });
+
+  ui.promptSubmit.addEventListener("click", submitTextPrompt);
+  ui.promptCancel.addEventListener("click", cancelTextPrompt);
+  ui.promptInput.addEventListener("keydown", function (event) {
+    if (event.key === "Enter") submitTextPrompt();
+    if (event.key === "Escape") cancelTextPrompt();
+  });
+
+  /* ----------------------------------------------------------------------- */
+  /* 26. BOOT THE ENGINE                                                     */
+  /* ----------------------------------------------------------------------- */
+
+  configureUiFromGame();
+  configureAudio();
+  renderInventory();
+  updateActionStatus();
+})();
+
+</script>
+</body>
+</html>
