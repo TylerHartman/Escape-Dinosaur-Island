@@ -140,7 +140,7 @@ body{padding-left:max(5px,env(safe-area-inset-left));padding-right:max(5px,env(s
       <div class="message-block block"><div id="message"></div></div>
     </div>
     <div id="action-status" class="action-status"></div>
-    <div id="inventory" class="inventory"></div><div class="v4-proof">V43 — changed the title-screen reconstruction note to 'remastered'</div>
+    <div id="inventory" class="inventory"></div><div class="v4-proof">V48 — added a locked-filing-cabinet examine hint</div>
   </section>
 
   <section id="game-over-screen" class="panel end-screen hidden">
@@ -383,7 +383,7 @@ const scenes = {
         ]
     },
     maintenance: {
-        title: "Maintenance door",
+        title: "Maintenance Door",
         description: () => "You are at the maintenance tunnel entrance.",
         image: () => state.maintenanceOpen ? 7 : 6,
         exits: {
@@ -415,7 +415,7 @@ const scenes = {
             { id: "flag", x: 45, y: 13, w: 12, h: 29, examine: () => "The Dinosaur Island flag hangs proudly from the roof." },
             { id: "window", x: 2, y: 55, w: 94, h: 22, examine: () => "The glare from the window shines in your eyes." },
             { id: "flowerbox", x: 0, y: 71, w: 100, h: 14, examine: () => "This is a flower box full of flowers." },
-            { id: "flower", x: 12, y: 72, w: 20, h: 18, examine: () => "This is the rare T-Rex Petunia.",
+            { id: "flower", x: 12, y: 72, w: 20, h: 18, examine: () => "This is the rare T-Rex Petunia.\nIt has an extremely strong aroma!",
                 take: () => state.flowerTaken ? "You already have that!" : takeItem("flower", "You took the rare T-Rex Petunia.", () => state.flowerTaken = true) }
         ]
     },
@@ -470,7 +470,7 @@ const scenes = {
         ]
     },
     control: {
-        title: "Control room",
+        title: "Control Room",
         description: () => "Walking through the doorway marked 'Staff Only,' you end up in the main office.",
         image: () => state.cabinetOpen ? 18 : 17,
         exits: { west: () => goScene("visitorInside"), south: () => goScene("maintenance"), east: noExit, north: noExit },
@@ -480,10 +480,10 @@ const scenes = {
             { id: "flowerpot", x: 4, y: 25, w: 20, h: 17, examine: () => "This is a clay flower pot." },
             { id: "lamp", x: 72, y: 0, w: 27, h: 31, examine: () => "The bulb has burned out." },
             { id: "drawers", x: 73, y: 45, w: 27, h: 55, examine: () => "These drawers are empty." },
-            { id: "cabinet", x: 0, y: 46, w: 31, h: 53, examine: () => state.cabinetOpen && !state.torchTaken ? "There is a blowtorch inside." : "This is a filing cabinet.",
+            { id: "cabinet", x: 0, y: 46, w: 31, h: 53, examine: () => state.cabinetOpen && !state.torchTaken ? "There is a blowtorch inside." : "This is a filing cabinet.\nIt appears to be locked!",
                 operate: (item) => {
                     if (state.cabinetOpen)
-                        return state.torchTaken ? "This is a filing cabinet." : "There is a blowtorch inside.";
+                        return state.torchTaken ? "This is a filing cabinet.\nIt appears to be locked!" : "There is a blowtorch inside.";
                     if (item === "nailfile") {
                         state.cabinetOpen = true;
                         renderScene();
@@ -506,7 +506,7 @@ const scenes = {
         ]
     },
     fence: {
-        title: "Electric fence",
+        title: "Electric Fence",
         description: () => state.fenceCut ? "You cut through the fence!" : (state.fencePowered ? "Hearing the low electric hum of the fence makes you feel at ease as you gaze at the surrounding foliage." : "The hum is gone. The fence is off!"),
         image: () => state.fenceCut ? 11 : 10,
         exits: { south: () => goScene("ranger4x4"), north: () => state.fenceCut ? goScene("trex") : noExit(), east: noExit, west: noExit },
@@ -564,7 +564,7 @@ const scenes = {
         hotspots: () => {
             if (!state.rangerGone)
                 return [
-                    { id: "ranger", x: 9, y: 7, w: 31, h: 84, examine: () => 'He says, "IM DEVRATS TON NETAE NI EVIF SYAD..." and some other mumbo jumbo.',
+                    { id: "ranger", x: 9, y: 7, w: 31, h: 84, examine: () => 'He says, "MI DEVRATS TON NETAE NI EVIF SYAD..." and some other mumbo jumbo.',
                         operate: (item) => {
                             if (item === "burger") {
                                 state.rangerFed = true;
@@ -682,7 +682,7 @@ function inventoryClick(id) {
         const text = {
             matches: "This is a box of all-purpose matches.", burger: "This is the world-famous T-Rex Burger. Too bad you're not hungry.",
             nailfile: "This is a silver nail file.", torch: state.torchLit ? "The blowtorch is lit." : "This is a blowtorch.",
-            flower: "This is the lovely T-Rex Petunia.", key: "This is a shiny key."
+            flower: "This is the rare T-Rex Petunia.\nThe aroma is so strong, like a pungent sweet perfume!", key: "This is a shiny key."
         };
         say(text[id]);
         clearAction();
@@ -917,7 +917,7 @@ scenes.restaurantOutside.hotspots=()=>[
   V4R(state.flowerTaken?14:13,'restaurant',0,70,326,174,{examine:()=>"The World-Famous Prehistoric Restaurant, home of the T-Rex Burger."}),
   V4R(state.flowerTaken?14:13,'left flower bed',0,174,95,206,{examine:()=>"This is a flower box full of flowers."}),
   V4R(state.flowerTaken?14:13,'right flower bed',230,174,326,206,{examine:()=>"This is a flower box full of flowers."}),
-  V4R(state.flowerTaken?14:13,'T-Rex Petunia',44,170,86,201,{examine:()=>"This is the rare T-Rex Petunia.",take:()=>state.flowerTaken?'You already have that!':takeItem('flower','You took the rare T-Rex Petunia.',()=>state.flowerTaken=true)})
+  V4R(state.flowerTaken?14:13,'T-Rex Petunia',44,170,86,201,{examine:()=>"This is the rare T-Rex Petunia.\nIt has an extremely strong aroma!",take:()=>state.flowerTaken?'You already have that!':takeItem('flower','You took the rare T-Rex Petunia.',()=>state.flowerTaken=true)})
 ];
 
 // Park Center exterior: independently coded flags/windows.
@@ -964,6 +964,13 @@ scenes.fence.hotspots=()=>[
   // so the smaller warning sign below gets priority where the two overlap.
   V4R(state.fenceCut?11:10,'electric fence',5,85,206,239,{
     examine:()=>state.fencePowered?'This is the electric fence that keeps the dinosaurs in.':'The hum is gone. The fence is off!',
+    take:()=>{
+      if(state.fencePowered){
+        die('You feel almost nothing as 10,000 volts rush through your body.');
+        return '';
+      }
+      return "You can't take that.";
+    },
     operate:(item)=>{
       if(state.fenceCut)return 'You cut through the fence!';
       if(item!=='torch')return "You can't operate that.";
@@ -990,7 +997,7 @@ scenes.trex.hotspots=()=>[
 scenes.zookeeper.hotspots=()=>{
   if(!state.rangerGone)return [
     V4R(23,'ranger',30,64,102,229,{
-      examine:()=>'He says, "IM DEVRATS TON NETAE NI EVIF SYAD..." and some other mumbo jumbo.',
+      examine:()=>'He says, "MI DEVRATS TON NETAE NI EVIF SYAD..." and some other mumbo jumbo.',
       operate:(item)=>{
         if(item==='burger'){
           state.rangerFed=true;state.rexGone=true;state.rexDistracted=false;state.inventory.burger=false;
