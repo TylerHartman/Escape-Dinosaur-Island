@@ -53,6 +53,7 @@ button:disabled{cursor:default;color:#777;background:#aaa;filter:saturate(.2);op
 .item-slot:not(.owned) .item-icon,.item-slot:not(.owned) .item-label{filter:grayscale(1) blur(1.8px);opacity:.26}
 .item-slot.owned .item-icon,.item-slot.owned .item-label{filter:none;opacity:1}
 .v4-proof{font-size:10px;color:#333;text-align:right;margin-top:4px}
+.escape-time{font-weight:bold;font-size:clamp(15px,3vw,22px);margin:12px auto;padding:10px 12px;border:2px inset #aaa;background:#000;color:#fff;width:max-content;max-width:100%;box-sizing:border-box;text-align:center}
 
 
 
@@ -113,7 +114,7 @@ body{padding-left:max(5px,env(safe-area-inset-left));padding-right:max(5px,env(s
       <button id="instructions-btn">INSTRUCTIONS</button>
       <button id="about-btn">ABOUT</button>
     </div>
-    <div class="small-note">Faithful browser reconstruction from the original 1996 game files.</div>
+    <div class="small-note">Remastered browser reconstruction from the original 1996 game files.</div>
     <div class="small-note">Tyler Hartman 9/15/26</div>
   </section>
 
@@ -139,7 +140,7 @@ body{padding-left:max(5px,env(safe-area-inset-left));padding-right:max(5px,env(s
       <div class="message-block block"><div id="message"></div></div>
     </div>
     <div id="action-status" class="action-status"></div>
-    <div id="inventory" class="inventory"></div><div class="v4-proof">V38 — converted the T-Rex measurement string from meters to feet</div>
+    <div id="inventory" class="inventory"></div><div class="v4-proof">V43 — changed the title-screen reconstruction note to 'remastered'</div>
   </section>
 
   <section id="game-over-screen" class="panel end-screen hidden">
@@ -151,7 +152,8 @@ body{padding-left:max(5px,env(safe-area-inset-left));padding-right:max(5px,env(s
   <section id="win-screen" class="panel end-screen hidden">
     <img src="data:image/png;base64,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" alt="Boat at the dock">
     <h1>You made it out in the nick of time. Congratulations!</h1>
-    <p>PRESS THE EXIT BUTTON</p>
+    <p id="escape-time" class="escape-time"></p>
+    <p>PRESS PLAY AGAIN TO START OVER</p>
     <button id="restart-win-btn">PLAY AGAIN</button>
   </section>
 </main>
@@ -246,6 +248,36 @@ function updateActionStatus() {
             : "OPERATE — click an inventory item, then its target.";
     actionStatusEl.textContent = t;
 }
+let escapeTimerStart = null;
+let escapeTimerEnd = null;
+
+function startEscapeTimer() {
+    escapeTimerStart = performance.now();
+    escapeTimerEnd = null;
+    const out = $("#escape-time");
+    if (out) out.textContent = "";
+}
+
+function stopEscapeTimer() {
+    if (escapeTimerStart !== null && escapeTimerEnd === null) {
+        escapeTimerEnd = performance.now();
+    }
+}
+
+function formatEscapeTime() {
+    const end = escapeTimerEnd ?? performance.now();
+    const elapsed = Math.max(0, Math.floor(end - (escapeTimerStart ?? end)));
+
+    const milliseconds = elapsed % 1000;
+    const totalSeconds = Math.floor(elapsed / 1000);
+    const seconds = totalSeconds % 60;
+    const totalMinutes = Math.floor(totalSeconds / 60);
+    const minutes = totalMinutes % 60;
+    const hours = Math.floor(totalMinutes / 60);
+
+    return `${String(hours).padStart(2,"0")} Hours ${String(minutes).padStart(2,"0")} Minutes ${String(seconds).padStart(2,"0")} Seconds ${String(milliseconds).padStart(3,"0")} Milliseconds`;
+}
+
 function die(text) {
     state.dead = true;
     music.pause();
@@ -255,6 +287,8 @@ function die(text) {
 }
 function win() {
     state.won = true;
+    stopEscapeTimer();
+    $("#escape-time").textContent = `ESCAPE TIME: ${formatEscapeTime()}`;
     music.pause();
     gameScreen.classList.add("hidden");
     winScreen.classList.remove("hidden");
@@ -737,6 +771,7 @@ function submitLogin() {
 }
 function newGame() {
     state = initialState();
+    startEscapeTimer();
     startScreen.classList.add("hidden");
     gameOverScreen.classList.add("hidden");
     winScreen.classList.add("hidden");
@@ -820,10 +855,12 @@ scenes.visitorInside.exits={north:v4NoExit,south:()=>goScene('visitorOutside'),e
 scenes.control.exits={north:v4NoExit,south:v4NoExit,east:()=>goScene('visitorInside'),west:v4NoExit};
 scenes.car.exits={north:()=>goScene('ranger4x4'),south:v4NoExit,east:v4NoExit,west:v4NoExit};
 scenes.trex.exits={
+  // The Petunia only protects the route past the T-Rex toward the Zookeeper.
+  // Trying to head north while the T-Rex is still present remains fatal.
   north:()=>state.rexGone?goScene('maintenance'):die('Seeing your sudden movement, the T-Rex quickly crushes you in its jaws.'),
   south:v4NoExit,
   east:()=>goScene('fence'),
-  west:()=> (state.rexGone || state.rexDistracted) ? goScene('zookeeper') : die('The T-Rex, seeing you from behind the trees, crushes you in its jaws.')
+  west:()=> (state.rexGone || state.inventory.flower) ? goScene('zookeeper') : die('The T-Rex, seeing you from behind the trees, crushes you in its jaws.')
 };
 scenes.zookeeper.exits={
   north:()=>die('Not seeing the cliff ahead, you plunge 200 feet to your death.'),
@@ -887,7 +924,7 @@ scenes.restaurantOutside.hotspots=()=>[
 scenes.visitorOutside.hotspots=()=>[
   V4R(15,'left flag',60,31,86,68,{examine:()=>"The Dinosaur Island flag hangs proudly from the roof."}),
   V4R(15,'right flag',155,31,180,68,{examine:()=>"The Dinosaur Island flag hangs proudly from the roof."}),
-  V4R(15,'dinosaur',275,15,296,49,{examine:()=>"This is a dinosaur."}),
+  V4R(15,'dinosaur',275,15,296,49,{examine:()=>"Whoa! A dinosaur! Even standing still, it is an incredible sight."}),
   V4R(15,'window 1',20,104,45,154,{examine:()=>"The glare from the window shines in your eyes."}),
   V4R(15,'window 2',184,104,210,154,{examine:()=>"The glare from the window shines in your eyes."}),
   V4R(15,'window 3',234,104,260,154,{examine:()=>"The glare from the window shines in your eyes."}),
@@ -939,20 +976,12 @@ scenes.fence.hotspots=()=>[
   V4R(state.fenceCut?11:10,'warning sign',116,142,171,202,{examine:()=>"DANGER! HIGH VOLTAGE — Series #25567ef"})
 ];
 
-// T-Rex. Permanent disappearance is tied to the ranger story event; the flower
-// is kept as the route-enabling distraction implied by the tape clue while the
-// remaining generic OPERATE P-code is still being decoded.
+// T-Rex. The rare T-Rex Petunia works passively while carried; it is not
+// operated directly on the dinosaur.
 scenes.trex.hotspots=()=>[
   V4R(state.rexGone?22:21,'T-Rex',153,42,325,214,{
     examine:()=>state.rexGone?'The T-Rex is gone!':'The great T-Rex.',
-    operate:(item)=>{
-      if(state.rexGone)return 'The T-Rex is gone!';
-      if(item==='flower'){
-        state.rexDistracted=true;
-        return 'The T-Rex is distracted by the T-Rex Petunia.';
-      }
-      die('Seeing your sudden movement, the T-Rex quickly crushes you in its jaws.');return '';
-    }
+    operate:()=>state.rexGone?'The T-Rex is gone!':"You can't operate that."
   }),
   V4R(state.rexGone?22:21,'palm tree',54,3,89,197,{examine:()=>"This is a prehistoric palm tree."})
 ];
@@ -992,7 +1021,7 @@ scenes.maintenance.hotspots=()=>[
 // The key is consumed by the maintenance puzzle in the recovered logic, so the
 // boat itself no longer incorrectly requires the key as V3 did.
 scenes.dock.hotspots=()=>[
-  {id:'boat',x:19,y:32,w:67,h:40,examine:()=>"A small boat. This could be your way off Dinosaur Island.",operate:()=>{say('You made it out in the nick of time. Congratulations!');setTimeout(win,300);return 'You made it out in the nick of time. Congratulations!';}}
+  {id:'boat',x:19,y:32,w:67,h:40,examine:()=>"A small boat. This could be your way off Dinosaur Island.",operate:()=>{stopEscapeTimer();say('You made it out in the nick of time. Congratulations!');setTimeout(win,300);return 'You made it out in the nick of time. Congratulations!';}}
 ];
 
 // Restore the original extracted inventory icon resources.
