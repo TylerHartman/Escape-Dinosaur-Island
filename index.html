@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Escape from Dinosaur Island — Browser Remake V8</title>
+<title>Escape From Dinosaur Island</title>
 <style>
 :root{--panel:#bdbdbd;--hi:#fff;--mid:#d9d9d9;--shadow:#555;--deep:#202020;--text:#111}
 *{box-sizing:border-box}
@@ -112,6 +112,7 @@ body{padding-left:max(5px,env(safe-area-inset-left));padding-right:max(5px,env(s
     <div class="start-buttons">
       <button id="start-btn">START GAME</button>
       <button id="instructions-btn">INSTRUCTIONS</button>
+      <button id="story-btn">STORY</button>
       <button id="about-btn">ABOUT</button>
     </div>
     <div class="small-note">Remastered browser reconstruction from the original 1996 game files.</div>
@@ -140,7 +141,7 @@ body{padding-left:max(5px,env(safe-area-inset-left));padding-right:max(5px,env(s
       <div class="message-block block"><div id="message"></div></div>
     </div>
     <div id="action-status" class="action-status"></div>
-    <div id="inventory" class="inventory"></div><div class="v4-proof">V48 — added a locked-filing-cabinet examine hint</div>
+    <div id="inventory" class="inventory"></div><div class="v4-proof">V50 - Final Retail Build</div>
   </section>
 
   <section id="game-over-screen" class="panel end-screen hidden">
@@ -178,6 +179,17 @@ login:</pre>
   <button id="help-close">CLOSE</button>
 </div></div>
 
+
+<div id="story-modal" class="modal hidden"><div class="modal-box text-modal">
+  <h2>STORY</h2>
+  <p><b>Welcome to Dinosaur Island!</b></p>
+  <p>In this adventure, you are trapped inside a dinosaur theme park located on a small island in the British West Indies.</p>
+  <p>To your amazement, the dinosaurs here are real, and you must figure out a way to escape the island!</p>
+  <p>To get off the island, you must find your way to the dock and leave by boat.</p>
+  <p><b>Good luck!</b></p>
+  <button id="story-close">CLOSE</button>
+</div></div>
+
 <div id="about-modal" class="modal hidden"><div class="modal-box text-modal">
   <h2>DINOSAUR ISLAND</h2>
   <p>Original game © Sea Side Studios, 1996. Created by Laszlo Safranyik.</p>
@@ -204,6 +216,7 @@ const winScreen = $("#win-screen");
 const loginModal = $("#login-modal");
 const loginInput = $("#login-input");
 const helpModal = $("#help-modal");
+const storyModal = $("#story-modal");
 const aboutModal = $("#about-modal");
 const music = $("#music");
 const congrats = $("#congrats");
@@ -480,10 +493,10 @@ const scenes = {
             { id: "flowerpot", x: 4, y: 25, w: 20, h: 17, examine: () => "This is a clay flower pot." },
             { id: "lamp", x: 72, y: 0, w: 27, h: 31, examine: () => "The bulb has burned out." },
             { id: "drawers", x: 73, y: 45, w: 27, h: 55, examine: () => "These drawers are empty." },
-            { id: "cabinet", x: 0, y: 46, w: 31, h: 53, examine: () => state.cabinetOpen && !state.torchTaken ? "There is a blowtorch inside." : "This is a filing cabinet.\nIt appears to be locked!",
+            { id: "cabinet", x: 0, y: 46, w: 31, h: 53, examine: () => state.cabinetOpen ? (state.torchTaken ? "The filing cabinet is open." : "There is a blowtorch inside.") : "This is a filing cabinet.\nIt appears to be locked!",
                 operate: (item) => {
                     if (state.cabinetOpen)
-                        return state.torchTaken ? "This is a filing cabinet.\nIt appears to be locked!" : "There is a blowtorch inside.";
+                        return state.torchTaken ? "The filing cabinet is open." : "There is a blowtorch inside.";
                     if (item === "nailfile") {
                         state.cabinetOpen = true;
                         renderScene();
@@ -796,8 +809,10 @@ document.querySelectorAll(".verb").forEach(b => b.addEventListener("click", () =
 document.querySelectorAll(".dir").forEach(b => b.addEventListener("click", () => directionClick(b.dataset.dir)));
 $("#start-btn").addEventListener("click", newGame);
 $("#instructions-btn").addEventListener("click", () => helpModal.classList.remove("hidden"));
+$("#story-btn").addEventListener("click", () => storyModal.classList.remove("hidden"));
 $("#about-btn").addEventListener("click", () => aboutModal.classList.remove("hidden"));
 $("#help-close").addEventListener("click", () => helpModal.classList.add("hidden"));
+$("#story-close").addEventListener("click", () => storyModal.classList.add("hidden"));
 $("#about-close").addEventListener("click", () => aboutModal.classList.add("hidden"));
 $("#login-cancel").addEventListener("click", closeLogin);
 $("#login-submit").addEventListener("click", submitLogin);
@@ -947,7 +962,7 @@ scenes.control.hotspots=()=>[
   V4R(state.cabinetOpen?18:17,'burnt bulb',233,30,254,42,{examine:()=>"The bulb has burned out."}),
   V4R(state.cabinetOpen?18:17,'drawers',239,121,325,229,{examine:()=>"These drawers are empty."}),
   V4R(state.cabinetOpen?18:17,'filing cabinet',0,120,87,179,{
-    examine:()=>state.cabinetOpen&&!state.torchTaken?'There is a blowtorch inside.':'This is a filing cabinet.',
+    examine:()=>state.cabinetOpen?(state.torchTaken?'The filing cabinet is open.':'There is a blowtorch inside.'):'This is a filing cabinet.\nIt appears to be locked!',
     operate:(item)=>{
       if(state.cabinetOpen)return state.torchTaken?'The filing cabinet is open.':'There is a blowtorch inside.';
       if(item==='nailfile'){state.cabinetOpen=true;renderScene();return 'You pick the filing cabinet lock with the nail file. There is a blowtorch inside.';}
@@ -1035,12 +1050,19 @@ scenes.dock.hotspots=()=>[
 renderInventory=function(){
   inventoryEl.innerHTML='';
   Object.keys(itemNames).forEach(id=>{
+    const owned=state.inventory[id];
     const slot=document.createElement('button');
-    slot.className='item-slot'+(state.inventory[id]?' owned':'')+(state.selectedItem===id?' selected':'');
-    slot.disabled=!state.inventory[id];slot.dataset.item=id;
-    const icon=(id==='torch'&&state.torchLit)?V4_ICONS.torch_lit:V4_ICONS[id];
-    slot.innerHTML=`<img class="item-icon" src="${icon}" alt=""><span class="item-label">${itemNames[id]}</span>`;
-    slot.addEventListener('click',()=>inventoryClick(id));inventoryEl.appendChild(slot);
+    slot.className='item-slot'+(owned?' owned':'')+(state.selectedItem===id?' selected':'');
+    slot.disabled=!owned;slot.dataset.item=id;
+    if(owned){
+      const icon=(id==='torch'&&state.torchLit)?V4_ICONS.torch_lit:V4_ICONS[id];
+      slot.innerHTML=`<img class="item-icon" src="${icon}" alt=""><span class="item-label">${itemNames[id]}</span>`;
+      slot.addEventListener('click',()=>inventoryClick(id));
+    }else{
+      slot.innerHTML='';
+      slot.setAttribute('aria-label','Empty inventory slot');
+    }
+    inventoryEl.appendChild(slot);
   });
 };
 
