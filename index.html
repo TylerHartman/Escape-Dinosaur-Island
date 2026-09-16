@@ -114,6 +114,7 @@ body{padding-left:max(5px,env(safe-area-inset-left));padding-right:max(5px,env(s
       <button id="about-btn">ABOUT</button>
     </div>
     <div class="small-note">Faithful browser reconstruction from the original 1996 game files.</div>
+    <div class="small-note">Tyler Hartman 9/15/26</div>
   </section>
 
   <section id="game-screen" class="panel hidden">
@@ -138,7 +139,7 @@ body{padding-left:max(5px,env(safe-area-inset-left));padding-right:max(5px,env(s
       <div class="message-block block"><div id="message"></div></div>
     </div>
     <div id="action-status" class="action-status"></div>
-    <div id="inventory" class="inventory"></div><div class="v4-proof">V32 — removed duplicate restaurant menu hotspot and expanded salad bar hotspot</div>
+    <div id="inventory" class="inventory"></div><div class="v4-proof">V38 — converted the T-Rex measurement string from meters to feet</div>
   </section>
 
   <section id="game-over-screen" class="panel end-screen hidden">
@@ -214,7 +215,7 @@ const initialState = () => ({
     flowerTaken: false, burgerTaken: false, matchesTaken: false,
     cabinetOpen: false, torchTaken: false, torchLit: false,
     fencePowered: true, fenceCut: false, rexGone: false,
-    rangerGone: false, hatMoved: false, keyTaken: false,
+    rangerGone: false, rangerFed: false, hatMoved: false, keyTaken: false,
     dead: false, won: false
 });
 let state = initialState();
@@ -322,9 +323,11 @@ const scenes = {
                 examine: () => state.gloveboxOpen && !state.nailfileTaken ? "In the recesses of the glove box, you find a nail file." : "This is a glove box.",
                 operate: () => { state.gloveboxOpen = true; renderScene(); return "You open the glove box."; },
                 take: () => state.gloveboxOpen && !state.nailfileTaken ? takeItem("nailfile", "You found a nail file.", () => state.nailfileTaken = true) : "You can't take that." },
-            { id: "tape", x: 50, y: 36, w: 19, h: 10, examine: () => "This is the tape deck.", operate: () => 'The tape deck plays: "The T-Rex is closing in on us, need the flo..." The voice goes dead.' },
-            { id: "radio", x: 67, y: 25, w: 20, h: 18, examine: () => "The radio is blinking 12:00." },
-            { id: "panel", x: 4, y: 23, w: 35, h: 33, examine: () => "This is the instrument panel. There is no fuel." },
+            // Entire stereo/radio body. The small green display below is a higher-priority hotspot.
+            { id: "tape", x: 56.5, y: 56.5, w: 19.0, h: 11.5, examine: () => "This is the tape deck.", operate: () => 'The tape deck plays: "The T-Rex is closing in on us, need the flo..." The voice goes dead.' },
+            { id: "radio", x: 57.5, y: 58.5, w: 7.0, h: 4.5, examine: () => "The radio is blinking 12:00." },
+            // Full gauge/instrument cluster on the driver's side.
+            { id: "panel", x: 1.5, y: 39.5, w: 54.0, h: 34.5, examine: () => "This is the instrument panel. There is no fuel." },
             { id: "mirror", x: 34, y: 4, w: 31, h: 12, examine: () => "This is the rearview mirror." }
         ]
     },
@@ -428,7 +431,7 @@ const scenes = {
         exits: { south: () => goScene("visitorOutside"), east: () => goScene("control"), north: noExit, west: noExit },
         hotspots: () => [
             { id: "skull", x: 60, y: 26, w: 27, h: 34, examine: () => "Examining the skull of the great T-Rex, you realize what an awesome killing machine it must have been." },
-            { id: "skeleton", x: 25, y: 30, w: 65, h: 45, examine: () => "The T-Rex measures 12 meters from head to tail." },
+            { id: "skeleton", x: 25, y: 30, w: 65, h: 45, examine: () => "The T-Rex measures about 39 feet from head to tail." },
             { id: "info", x: 1, y: 7, w: 98, h: 22, examine: () => "Tyrannosaurus rex is one of the largest meat-eating dinosaurs. It was named by Henry Fairfield Osborn after partial skeletal remains were found in Montana in 1905." }
         ]
     },
@@ -530,11 +533,12 @@ const scenes = {
                     { id: "ranger", x: 9, y: 7, w: 31, h: 84, examine: () => 'He says, "IM DEVRATS TON NETAE NI EVIF SYAD..." and some other mumbo jumbo.',
                         operate: (item) => {
                             if (item === "burger") {
-                                state.rangerGone = true;
+                                state.rangerFed = true;
+                                state.rexGone = true;
+                                state.rexDistracted = false;
                                 useItemSuccess("burger");
-                                renderScene();
                                 renderInventory();
-                                return "The ranger grabs the burger from your hand. You see the T-Rex running off in the distance with the ranger in its mouth!";
+                                return "The ranger grabs the burger from your hand.";
                             }
                             return "You can't operate that.";
                         } }
@@ -644,7 +648,7 @@ function inventoryClick(id) {
         const text = {
             matches: "This is a box of all-purpose matches.", burger: "This is the world-famous T-Rex Burger. Too bad you're not hungry.",
             nailfile: "This is a silver nail file.", torch: state.torchLit ? "The blowtorch is lit." : "This is a blowtorch.",
-            flower: "This is the lovely T-Rex Petunia.", key: "This is a computer key."
+            flower: "This is the lovely T-Rex Petunia.", key: "This is a shiny key."
         };
         say(text[id]);
         clearAction();
@@ -821,7 +825,15 @@ scenes.trex.exits={
   east:()=>goScene('fence'),
   west:()=> (state.rexGone || state.rexDistracted) ? goScene('zookeeper') : die('The T-Rex, seeing you from behind the trees, crushes you in its jaws.')
 };
-scenes.zookeeper.exits={north:()=>die('Not seeing the cliff ahead, you plunge 200 feet to your death.'),south:v4NoExit,east:()=>goScene('trex'),west:v4NoExit};
+scenes.zookeeper.exits={
+  north:()=>die('Not seeing the cliff ahead, you plunge 200 feet to your death.'),
+  south:v4NoExit,
+  east:()=>{
+    if(state.rangerFed && !state.rangerGone) state.rangerGone=true;
+    goScene('trex');
+  },
+  west:v4NoExit
+};
 scenes.maintenance.exits={north:()=>state.maintenanceOpen?goScene('dock'):v4NoExit(),south:()=>goScene('trex'),east:v4NoExit,west:v4NoExit};
 scenes.dock.exits={north:v4NoExit,south:()=>goScene('maintenance'),east:v4NoExit,west:v4NoExit};
 
@@ -834,9 +846,13 @@ scenes.car.hotspots=()=>[
     operate:()=>{state.gloveboxOpen=true;renderScene();return 'You open the glove box.';},
     take:()=>state.gloveboxOpen&&!state.nailfileTaken?takeItem('nailfile','You found a nail file.',()=>state.nailfileTaken=true):"You can't take that."
   }),
-  V4R(state.gloveboxOpen?1:2,'tape deck',188,142,246,149,{examine:()=>"This is the tape deck.",operate:()=>'The tape deck plays: "The T-Rex is closing in on us, need the flo..." The voice goes dead.'}),
-  {id:'radio',x:67,y:25,w:20,h:18,examine:()=>"The radio is blinking 12:00."},
-  {id:'instrument panel',x:4,y:23,w:35,h:33,examine:()=>"This is the instrument panel. There is no fuel."}
+  // Entire radio/stereo body. The tiny green display is listed after it so it wins overlap clicks.
+  V4R(state.gloveboxOpen?1:2,'tape deck',186,136,250,164,{examine:()=>"This is the tape deck.",operate:()=>'The tape deck plays: "The T-Rex is closing in on us, need the flo..." The voice goes dead.'}),
+  V4R(state.gloveboxOpen?1:2,'radio display',190,143,213,154,{examine:()=>"The radio is blinking 12:00."}),
+  // Full visible instrument/gauge cluster.
+  V4R(state.gloveboxOpen?1:2,'instrument panel',5,96,183,180,{examine:()=>"This is the instrument panel. There is no fuel."}),
+  // Rearview mirror hotspot from the original game string.
+  V4R(state.gloveboxOpen?1:2,'rearview mirror',114,10,217,47,{examine:()=>"This is the rearview mirror"})
 ];
 
 // Ranger 4x4 exterior. Tree-carving clue removed as cut content.
@@ -881,7 +897,7 @@ scenes.visitorOutside.hotspots=()=>[
 // Inside Park Center / museum.
 scenes.visitorInside.hotspots=()=>[
   V4R(16,'T-Rex skull',255,86,292,112,{examine:()=>"Examining the skull of the great T-Rex, you realize what an awesome killing machine it must have been."}),
-  V4R(16,'T-Rex skeleton',164,118,243,188,{examine:()=>"The T-Rex measures 12 meters from head to tail."}),
+  V4R(16,'T-Rex skeleton',164,118,243,188,{examine:()=>"The T-Rex measures about 39 feet from head to tail."}),
   // Expanded around the question-mark information plaque in the lower-left corner.
   V4R(16,'information plaque',14,168,55,211,{examine:()=>"Tyrannosaurus rex is one of the largest meat-eating dinosaurs. It was named by Henry Fairfield Osborn after partial skeletal remains were found in Montana in 1905."})
 ];
@@ -941,21 +957,20 @@ scenes.trex.hotspots=()=>[
   V4R(state.rexGone?22:21,'palm tree',54,3,89,197,{examine:()=>"This is a prehistoric palm tree."})
 ];
 
-// Zookeeper / ranger sequence and exact hat/key/tree hitboxes.
+// Zookeeper / ranger sequence and exact hat/key hitboxes. Cut tree-carving content removed.
 scenes.zookeeper.hotspots=()=>{
   if(!state.rangerGone)return [
     V4R(23,'ranger',30,64,102,229,{
       examine:()=>'He says, "IM DEVRATS TON NETAE NI EVIF SYAD..." and some other mumbo jumbo.',
       operate:(item)=>{
         if(item==='burger'){
-          state.rangerGone=true;state.rexGone=true;state.rexDistracted=false;state.inventory.burger=false;
-          renderScene();renderInventory();
-          return 'The ranger grabs the burger from your hand. You see the T-Rex running off in the distance with the ranger in its mouth!';
+          state.rangerFed=true;state.rexGone=true;state.rexDistracted=false;state.inventory.burger=false;
+          renderInventory();
+          return 'The ranger grabs the burger from your hand.';
         }
         return "You can't operate that.";
       }
-    }),
-    V4R(23,'tree carving',249,133,259,204,{examine:()=>"There is a carving in the tree: N, N, S, L, R."})
+    })
   ];
   if(!state.hatMoved)return [V4R(24,'hat',34,164,103,208,{examine:()=>"All that is left is his hat.",operate:()=>{state.hatMoved=true;renderScene();return 'Moving the hat aside, you see a key.';}})];
   if(!state.keyTaken)return [V4R(25,'key',50,171,89,202,{examine:()=>"This is a shiny key.",take:()=>takeItem('key','You took the key.',()=>state.keyTaken=true)})];
