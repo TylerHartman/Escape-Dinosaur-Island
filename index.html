@@ -138,7 +138,7 @@ body{padding-left:max(5px,env(safe-area-inset-left));padding-right:max(5px,env(s
       <div class="message-block block"><div id="message"></div></div>
     </div>
     <div id="action-status" class="action-status"></div>
-    <div id="inventory" class="inventory"></div><div class="v4-proof">V28 — restored original inventory item icons</div>
+    <div id="inventory" class="inventory"></div><div class="v4-proof">V30 — removed cut-content tree carving and corrected restaurant interior hotspots</div>
   </section>
 
   <section id="game-over-screen" class="panel end-screen hidden">
@@ -392,9 +392,10 @@ const scenes = {
             { id: "map", x: 32, y: 4, w: 36, h: 27, examine: () => "This is the map of the island." },
             { id: "burgerpic", x: 63, y: 5, w: 32, h: 34, examine: () => "This is a picture of the famous T-Rex Burger." },
             { id: "rexpic", x: 5, y: 5, w: 29, h: 34, examine: () => "The mighty T-Rex." },
-            { id: "salad", x: 31, y: 46, w: 40, h: 35, examine: () => "This is the salad bar. Is the food here plastic?" },
-            { id: "spice", x: 8, y: 53, w: 15, h: 25, examine: () => "This is an empty revolving spice rack." },
-            { id: "pricenote", x: 60, y: 67, w: 24, h: 18, examine: () => 'The note reads: "The world-famous T-Rex Burger, a staff favorite, $4.95. With prehistoric fries, $6.50."' }
+            // Tightened to the actual SALAD BAR area so it does not absorb the table note.
+            { id: "salad", x: 31, y: 47, w: 28, h: 29, examine: () => "This is the salad bar. Is the food here plastic?" },
+            // Price note moved onto the actual note on the right-side table.
+            { id: "pricenote", x: 63, y: 66, w: 14, h: 12, examine: () => 'The note reads: "The world-famous T-Rex Burger, a staff favorite, $4.95. With prehistoric fries, $6.50."' }
         ]
     },
     kitchen: {
@@ -576,6 +577,28 @@ function takeItem(id, msg, sideEffect) {
     renderInventory();
     return msg;
 }
+function getVisibleSceneRect() {
+    const box = sceneImg.getBoundingClientRect();
+    const iw = sceneImg.naturalWidth || box.width;
+    const ih = sceneImg.naturalHeight || box.height;
+    if (!iw || !ih || !box.width || !box.height) return box;
+
+    // The image uses object-fit: contain. On wide desktop layouts the IMG
+    // element can be wider than the actual painted bitmap because max-height
+    // clamps its height, leaving black letterbox space inside the element.
+    const scale = Math.min(box.width / iw, box.height / ih);
+    const width = iw * scale;
+    const height = ih * scale;
+    return {
+        left: box.left + (box.width - width) / 2,
+        top: box.top + (box.height - height) / 2,
+        right: box.left + (box.width + width) / 2,
+        bottom: box.top + (box.height + height) / 2,
+        width,
+        height
+    };
+}
+
 function renderScene() {
     const s = scenes[state.scene];
     const n = s.image();
@@ -587,13 +610,18 @@ function renderScene() {
 }
 function renderDebug() {
     debugOverlay.innerHTML = "";
+    if (!debugMode || !sceneImg.complete || !sceneImg.naturalWidth) return;
+
+    const imageRect = getVisibleSceneRect();
+    const wrapRect = sceneWrap.getBoundingClientRect();
+
     currentHotspots.forEach(h => {
         const d = document.createElement("div");
         d.className = "debug-hotspot";
-        d.style.left = h.x + "%";
-        d.style.top = h.y + "%";
-        d.style.width = h.w + "%";
-        d.style.height = h.h + "%";
+        d.style.left = (imageRect.left - wrapRect.left + imageRect.width * h.x / 100) + "px";
+        d.style.top = (imageRect.top - wrapRect.top + imageRect.height * h.y / 100) + "px";
+        d.style.width = (imageRect.width * h.w / 100) + "px";
+        d.style.height = (imageRect.height * h.h / 100) + "px";
         d.textContent = h.id;
         debugOverlay.appendChild(d);
     });
@@ -650,8 +678,13 @@ function sceneClick(ev) {
     if (!state.verb || state.verb === "go") {
         return;
     }
-    const r = sceneImg.getBoundingClientRect();
-    const px = (ev.clientX - r.left) / r.width * 100, py = (ev.clientY - r.top) / r.height * 100;
+    const r = getVisibleSceneRect();
+    if (ev.clientX < r.left || ev.clientX > r.right || ev.clientY < r.top || ev.clientY > r.bottom) {
+        clearAction();
+        return;
+    }
+    const px = (ev.clientX - r.left) / r.width * 100;
+    const py = (ev.clientY - r.top) / r.height * 100;
     const h = [...currentHotspots].reverse().find(h => px >= h.x && px <= h.x + h.w && py >= h.y && py <= h.y + h.h);
     if (!h) {
         say(state.verb === "examine" ? "There's nothing interesting there." : state.verb === "take" ? "You can't take that." : "You can't operate that.");
@@ -746,6 +779,7 @@ else {
 // Keep overlays aligned when image size settles.
 sceneImg.addEventListener("load", () => { if (debugMode)
     renderDebug(); });
+window.addEventListener("resize", () => { if (debugMode) renderDebug(); });
 
 </script>
 
@@ -806,13 +840,12 @@ scenes.car.hotspots=()=>[
   {id:'instrument panel',x:4,y:23,w:35,h:33,examine:()=>"This is the instrument panel. There is no fuel."}
 ];
 
-// Ranger 4x4 exterior. EXAMINE on the truck is the original route into it.
+// Ranger 4x4 exterior. Tree-carving clue removed as cut content.
 scenes.ranger4x4.hotspots=()=>[
   V4R(12,'Ranger vehicle door',98,70,236,208,{
     examine:()=>{goScene('car','Noticing that the door is open, you climb inside.');return '';},
     operate:()=>"You can't operate that."
-  }),
-  V4R(12,'tree carving',249,133,259,204,{examine:()=>"There is a carving in the tree: N, N, S, L, R."})
+  })
 ];
 
 // Kitchen exact tests recovered from P-code.
